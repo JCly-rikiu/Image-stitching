@@ -2,6 +2,7 @@
 #include <string>
 
 #include "image.h"
+#include "detection.h"
 
 int main(int argc, char *argv[]) {
   if (argc < 2) {
@@ -16,6 +17,8 @@ int main(int argc, char *argv[]) {
     std::cerr << "The image directory is empty!" << std::endl;
     return EXIT_FAILURE;
   }
+
+  get_MSOP_features(image_data[0]);
 
   return EXIT_SUCCESS;
 }
