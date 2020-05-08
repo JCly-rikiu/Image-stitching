@@ -12,7 +12,7 @@ std::vector<std::tuple<double, double>> calculate_orientation(const cv::Mat& ima
   std::cout << "\tcalculate orientation" << std::endl;
 
   cv::Mat blur;
-  cv::GaussianBlur(image, blur, cv::Size(), 1.0, 1.0, cv::BORDER_REPLICATE);
+  cv::GaussianBlur(image, blur, cv::Size(), 4.5, 4.5, cv::BORDER_REPLICATE);
 
   cv::Mat ix, iy;
   cv::Sobel(blur, ix, -1, 1, 0, 1);
@@ -76,7 +76,7 @@ std::vector<std::tuple<int, int>> adaptive_non_maximal_supression(std::vector<st
   }
 
   std::sort(candidates.begin(), candidates.end(), std::greater<std::tuple<int, int, int>>());
-  candidates.resize(500);
+  if (candidates.size() > 500) candidates.resize(500);
 
   std::vector<std::tuple<int, int>> feature_points;
   for (const auto& [s, i, j] : candidates) feature_points.emplace_back(i, j);
@@ -115,11 +115,8 @@ std::vector<std::tuple<double, double, double, double>> Harris_corner_detector(c
   for (int i = 0; i != strength.rows; i++) {
     auto s = strength.ptr<double>(i);
     auto m = mask.ptr<unsigned char>(i);
-    for (int j = 0; j != strength.cols; j++) {
-      if (s[j] > 10 && m[j] == 255) {
-        points.emplace_back(s[j], i, j);
-      }
-    }
+    for (int j = 0; j != strength.cols; j++)
+      if (s[j] > 10 && m[j] == 255) points.emplace_back(s[j], i, j);
   }
 
   auto anms_points = adaptive_non_maximal_supression(points);
@@ -127,13 +124,9 @@ std::vector<std::tuple<double, double, double, double>> Harris_corner_detector(c
 
   auto orientation = calculate_orientation(image, anms_points);
 
-  std::vector<std::tuple<double, double, double, double>> feature_points;
-  std::transform(spf_points.begin(), spf_points.end(), orientation.begin(), std::back_inserter(feature_points),
-                 [](const auto& p, const auto& o) -> std::tuple<double, double, double, double> {
-                   auto [i, j] = p;
-                   auto [cos, sin] = o;
-                   return {i, j, cos, sin};
-                 });
+  std::vector<std::tuple<double, double, double, double>> feature_points(spf_points.size());
+  std::transform(spf_points.begin(), spf_points.end(), orientation.begin(), feature_points.begin(),
+                 [](const auto& p, const auto& o) { return std::tuple_cat(p, o); });
 
   return feature_points;
 }
