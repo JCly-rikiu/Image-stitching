@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
     return EXIT_FAILURE;
   }
 
-  get_MSOP_features(image_data[0]);
+  auto feature_points = get_MSOP_features(image_data[0]);
 
   return EXIT_SUCCESS;
 }
