@@ -95,7 +95,7 @@ std::vector<std::tuple<int, int>> adaptive_non_maximal_supression(std::vector<st
   return feature_points;
 }
 
-std::vector<std::tuple<int, int, double>> Harris_corner_detector(const cv::Mat& image) {
+std::tuple<std::vector<std::tuple<int, int>>, std::vector<double>> Harris_corner_detector(const cv::Mat& image) {
   std::cout << "\tHarris Corner Detector" << std::endl;
 
   cv::Mat blur;
@@ -134,42 +134,40 @@ std::vector<std::tuple<int, int, double>> Harris_corner_detector(const cv::Mat& 
   auto anms_points = adaptive_non_maximal_supression(points);
   auto spf_points = sub_pixel_refinement(strength, anms_points);
 
-  auto orientation = calculate_orientation(image, anms_points);
+  auto orientations = calculate_orientation(image, spf_points);
 
-  std::vector<std::tuple<int, int, double>> feature_points(spf_points.size());
-  std::transform(spf_points.begin(), spf_points.end(), orientation.begin(), feature_points.begin(),
-                 [](const auto& p, const auto& o) { return std::tuple_cat(p, std::make_tuple(o)); });
-
-  return feature_points;
+  return {spf_points, orientations};
 }
 
-std::vector<std::vector<cv::Mat>> get_MSOP_features(const cv::Mat& image) {
+std::vector<std::tuple<std::vector<std::tuple<int, int>>, std::vector<cv::Mat>>> get_MSOP_features(const cv::Mat& image) {
   std::cout << "[Get MSOP features...]" << std::endl;
 
   cv::Mat gray;
   cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
   gray.convertTo(gray, CV_64F);
 
-  std::vector<std::vector<cv::Mat>> feature_descriptors;
+  std::vector<std::tuple<std::vector<std::tuple<int, int>>, std::vector<cv::Mat>>> feature_descriptors;
   for (int layer = 0; layer < 5; layer++) {
     std::cout << "\t[layer " << layer << "]" << std::endl;
 
-    auto feature_points = Harris_corner_detector(gray);
+    auto [feature_points, orientations] = Harris_corner_detector(gray);
 
     // cv::Mat test = gray.clone();
     // test.convertTo(test, CV_8U);
     // cv::cvtColor(test, test, cv::COLOR_GRAY2BGR);
-    // for (const auto& [i, j, t] : feature_points) {
-    //   std::cout << i << " " << j << " " << t << std::endl;
-    //   cv::circle(test, cv::Point(j, i), 10 / std::pow(2, layer), cv::Scalar(0, 0, 255), 3 / std::pow(2, layer));
+    // for (const auto& [i, j] : feature_points) {
+      // auto [i, j] = feature_points[0];
+      // auto t = orientations[0];
+      // std::cout << i << " " << j << " " << t << std::endl;
+      // cv::circle(test, cv::Point(j, i), 10 / std::pow(2, layer), cv::Scalar(0, 0, 255), 3 / std::pow(2, layer));
     // }
     // cv::imwrite("test" + std::to_string(layer) + ".jpg", test);
 
-    cv::pyrDown(gray, gray, cv::Size((gray.cols + 1) / 2, (gray.rows + 1) / 2), cv::BORDER_REPLICATE);
+    cv::pyrDown(gray, gray, cv::Size(gray.cols / 2, gray.rows / 2), cv::BORDER_REPLICATE);
 
-    feature_descriptors.push_back(get_descriptors(gray, feature_points));
+    feature_descriptors.emplace_back(feature_points, get_descriptors(gray, feature_points, orientations));
 
-    // cv::Mat patch = feature_descriptors[layer][0];
+    // cv::Mat patch = std::get<1>(feature_descriptors[layer])[0];
     // cv::normalize(patch, patch, 1, 0, cv::NORM_MINMAX);
     // cv::imwrite("patch" + std::to_string(layer) + ".jpg", patch * 255);
   }
