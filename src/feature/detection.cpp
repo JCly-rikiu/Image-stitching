@@ -139,14 +139,14 @@ std::tuple<std::vector<std::tuple<double, double>>, std::vector<double>> Harris_
   return {spf_points, orientations};
 }
 
-MSOP_descriptor get_MSOP_features(const cv::Mat& image) {
+MSOPDescriptor get_MSOP_features(const cv::Mat& image) {
   std::cout << "[Get MSOP features...]" << std::endl;
 
   cv::Mat gray;
   cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
   gray.convertTo(gray, CV_64F);
 
-  MSOP_descriptor feature_descriptors;
+  MSOPDescriptor feature_descriptors;
   for (int layer = 0; layer < 5; layer++) {
     std::cout << "\t[layer " << layer << "]" << std::endl;
 

@@ -5,8 +5,8 @@
 
 #include <opencv2/opencv.hpp>
 
-typedef std::vector<std::tuple<std::vector<std::tuple<double, double>>, std::vector<cv::Mat>>> MSOP_descriptor;
+typedef std::vector<std::tuple<std::vector<std::tuple<double, double>>, std::vector<cv::Mat>>> MSOPDescriptor;
 
-MSOP_descriptor get_MSOP_features(const cv::Mat&);
+MSOPDescriptor get_MSOP_features(const cv::Mat&);
 
 #endif
