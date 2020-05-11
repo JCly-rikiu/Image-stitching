@@ -27,10 +27,8 @@ std::vector<cv::Mat> load_images(std::string& image_dir) {
 
     cv::Mat image;
     image = cv::imread(image_dir + filename, cv::IMREAD_COLOR);
-    if (!image.data) {
+    if (!image.data)
       std::cerr << "Could not open or find " << filename << std::endl;
-      break;
-    }
 
     images.push_back(image);
   }
