@@ -5,7 +5,7 @@
 
 #include <opencv2/opencv.hpp>
 
-std::vector<cv::Mat> get_descriptors(const cv::Mat&, const std::vector<std::tuple<int, int>>&,
+std::vector<cv::Mat> get_descriptors(const cv::Mat&, const std::vector<std::tuple<double, double>>&,
                                      const std::vector<double>&);
 
 #endif
