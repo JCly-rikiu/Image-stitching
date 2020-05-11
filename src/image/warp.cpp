@@ -42,13 +42,12 @@ void cylindrical_warp_image(cv::Mat& image) {
   image = warp_image;
 }
 
-void cylindrical_warp_feature_points(std::vector<std::tuple<double, double>>& feature_points, const int rows,
-                                     const int cols) {
-  int cx = cols / 2;
-  int cy = rows / 2;
+void cylindrical_warp_feature_points(std::vector<std::tuple<double, double, double, double>>& feature_points,
+                                     const int rows, const int cols) {
+  auto warp = [&](auto& i, auto& j) {
+    int cx = cols / 2;
+    int cy = rows / 2;
 
-  std::vector<std::tuple<double, double>> warp_feature_points;
-  for (auto [i, j] : feature_points) {
     double x = j - cx;
     double theta = focal_length * std::atan(x / focal_length);
 
@@ -58,8 +57,12 @@ void cylindrical_warp_feature_points(std::vector<std::tuple<double, double>>& fe
     theta += cx;
     h += cy;
 
-    warp_feature_points.emplace_back(h, theta);
-  }
+    i = h;
+    j = theta;
+  };
 
-  feature_points = warp_feature_points;
+  for (auto& [i1, j1, i2, j2] : feature_points) {
+    warp(i1, j1);
+    warp(i2, j2);
+  }
 }
