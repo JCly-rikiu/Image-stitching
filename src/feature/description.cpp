@@ -8,9 +8,8 @@
 
 #include "description.h"
 
-std::vector<cv::Mat> get_descriptors(const cv::Mat& image,
-                                     const std::vector<std::tuple<double, double>>& feature_points,
-                                     const std::vector<double>& orientations) {
+std::vector<cv::Mat> get_descriptors(const cv::Mat& image, const std::vector<std::tuple<float, float>>& feature_points,
+                                     const std::vector<float>& orientations) {
   std::cout << "\tget descriptor" << std::endl;
 
   const int patch_half_size = 20;
@@ -24,7 +23,7 @@ std::vector<cv::Mat> get_descriptors(const cv::Mat& image,
   cv::Mat patch;
   cv::Mat mean, stddev;
 
-  std::vector<std::tuple<double, double, double>> points_orientations(feature_points.size());
+  std::vector<std::tuple<float, float, float>> points_orientations(feature_points.size());
   std::transform(feature_points.begin(), feature_points.end(), orientations.begin(), points_orientations.begin(),
                  [](const auto& p, const auto& o) { return std::tuple_cat(p, std::make_tuple(o)); });
 
@@ -55,8 +54,9 @@ std::vector<cv::Mat> get_descriptors(const cv::Mat& image,
 
     cv::meanStdDev(patch, mean, stddev);
     patch = (patch - mean) / stddev;
+    cv::patchNaNs(patch);
 
-    descriptors.push_back(patch);
+    descriptors.push_back(patch.reshape(1, 64).t());
   }
 
   return descriptors;

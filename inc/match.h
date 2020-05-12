@@ -7,8 +7,8 @@
 
 #include "detection.h"
 
-typedef std::vector<std::vector<std::vector<std::tuple<double, double, double, double>>>> MatchPoints;
-typedef std::vector<std::deque<std::tuple<int, double, double>>> PanoramasLists;
+typedef std::vector<std::vector<std::vector<std::tuple<float, float, float, float>>>> MatchPoints;
+typedef std::vector<std::deque<std::tuple<int, float, float>>> PanoramasLists;
 
 MatchPoints match_features(const std::vector<MSOPDescriptor>&);
 PanoramasLists match_images(const MatchPoints&);

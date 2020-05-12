@@ -10,9 +10,9 @@
 #include "description.h"
 #include "detection.h"
 
-const double radian_to_degree = 180 / std::acos(-1);
+const float radian_to_degree = 180 / std::acos(-1);
 
-std::vector<double> calculate_orientation(const cv::Mat& image, const std::vector<std::tuple<double, double>>& points) {
+std::vector<float> calculate_orientation(const cv::Mat& image, const std::vector<std::tuple<float, float>>& points) {
   std::cout << "\tcalculate orientation" << std::endl;
 
   cv::Mat blur;
@@ -22,7 +22,7 @@ std::vector<double> calculate_orientation(const cv::Mat& image, const std::vecto
   cv::Sobel(blur, ix, -1, 1, 0, 1);
   cv::Sobel(blur, iy, -1, 0, 1, 1);
 
-  std::vector<double> orientation;
+  std::vector<float> orientation;
   for (const auto& [di, dj] : points) {
     int i = static_cast<int>(std::nearbyint(di));
     int j = static_cast<int>(std::nearbyint(dj));
@@ -36,17 +36,17 @@ std::vector<double> calculate_orientation(const cv::Mat& image, const std::vecto
     else if (j >= blur.cols)
       j = blur.cols - 1;
 
-    double x = ix.at<double>(i, j);
-    double y = iy.at<double>(i, j);
+    float x = ix.at<float>(i, j);
+    float y = iy.at<float>(i, j);
 
-    double norm = std::sqrt(x * x + y * y);
+    float norm = std::sqrt(x * x + y * y);
     orientation.push_back(std::acos(x / norm) * radian_to_degree);
   }
 
   return orientation;
 }
 
-std::vector<std::tuple<double, double>> sub_pixel_refinement(const cv::Mat& strength,
+std::vector<std::tuple<float, float>> sub_pixel_refinement(const cv::Mat& strength,
                                                              const std::vector<std::tuple<int, int>>& points) {
   std::cout << "\tsub pixel refinement" << std::endl;
 
@@ -54,31 +54,31 @@ std::vector<std::tuple<double, double>> sub_pixel_refinement(const cv::Mat& stre
   // Make border for ROI out of bound issue
   cv::copyMakeBorder(strength, strength_b, 1, 1, 1, 1, cv::BORDER_REPLICATE);
 
-  std::vector<std::tuple<double, double>> feature_points;
+  std::vector<std::tuple<float, float>> feature_points;
   for (const auto& [i, j] : points) {
     cv::Mat f(strength_b, cv::Rect(j, i, 3, 3));
-    double f_x = (f.at<double>(1, 2) - f.at<double>(1, 0)) / 2;
-    double f_y = (f.at<double>(2, 1) - f.at<double>(0, 1)) / 2;
-    double f_x2 = f.at<double>(1, 2) + f.at<double>(1, 0) - 2 * f.at<double>(1, 1);
-    double f_y2 = f.at<double>(2, 1) + f.at<double>(0, 1) - 2 * f.at<double>(1, 1);
-    double f_xy = (f.at<double>(0, 0) + f.at<double>(2, 2) - f.at<double>(0, 2) - f.at<double>(2, 0)) / 4;
+    float f_x = (f.at<float>(1, 2) - f.at<float>(1, 0)) / 2;
+    float f_y = (f.at<float>(2, 1) - f.at<float>(0, 1)) / 2;
+    float f_x2 = f.at<float>(1, 2) + f.at<float>(1, 0) - 2 * f.at<float>(1, 1);
+    float f_y2 = f.at<float>(2, 1) + f.at<float>(0, 1) - 2 * f.at<float>(1, 1);
+    float f_xy = (f.at<float>(0, 0) + f.at<float>(2, 2) - f.at<float>(0, 2) - f.at<float>(2, 0)) / 4;
 
-    cv::Mat gradient = (cv::Mat_<double>(2, 1) << f_x, f_y);
-    cv::Mat hessian = (cv::Mat_<double>(2, 2) << f_x2, f_xy, f_xy, f_y2);
+    cv::Mat gradient = (cv::Mat_<float>(2, 1) << f_x, f_y);
+    cv::Mat hessian = (cv::Mat_<float>(2, 2) << f_x2, f_xy, f_xy, f_y2);
     cv::Mat x_m = hessian.inv() * gradient;
 
-    feature_points.emplace_back(i + x_m.at<double>(1, 0), j + x_m.at<double>(0, 0));
+    feature_points.emplace_back(i + x_m.at<float>(1, 0), j + x_m.at<float>(0, 0));
   }
 
   return feature_points;
 }
 
-std::vector<std::tuple<int, int>> adaptive_non_maximal_supression(std::vector<std::tuple<double, int, int>>& points) {
+std::vector<std::tuple<int, int>> adaptive_non_maximal_supression(std::vector<std::tuple<float, int, int>>& points) {
   std::cout << "\tANMS" << std::endl;
 
-  const int feature_number = 500;
+  const int feature_number = 300;
 
-  std::sort(points.begin(), points.end(), std::greater<std::tuple<double, int, int>>());
+  std::sort(points.begin(), points.end(), std::greater<std::tuple<float, int, int>>());
 
   std::vector<std::tuple<int, int, int>> candidates;
   for (auto current = points.begin(); current != points.end(); current++) {
@@ -105,7 +105,7 @@ std::vector<std::tuple<int, int>> adaptive_non_maximal_supression(std::vector<st
   return feature_points;
 }
 
-std::tuple<std::vector<std::tuple<double, double>>, std::vector<double>> Harris_corner_detector(const cv::Mat& image) {
+std::tuple<std::vector<std::tuple<float, float>>, std::vector<float>> Harris_corner_detector(const cv::Mat& image) {
   std::cout << "\tHarris Corner Detector" << std::endl;
 
   cv::Mat blur;
@@ -133,9 +133,9 @@ std::tuple<std::vector<std::tuple<double, double>>, std::vector<double>> Harris_
   cv::dilate(strength, mask, cv::Mat());
   cv::compare(strength, mask, mask, cv::CMP_GE);
 
-  std::vector<std::tuple<double, int, int>> points;
+  std::vector<std::tuple<float, int, int>> points;
   for (int i = 0; i != strength.rows; i++) {
-    auto s = strength.ptr<double>(i);
+    auto s = strength.ptr<float>(i);
     auto m = mask.ptr<unsigned char>(i);
     for (int j = 0; j != strength.cols; j++)
       if (s[j] > 10 && m[j] == 255) points.emplace_back(s[j], i, j);
@@ -154,7 +154,7 @@ MSOPDescriptor get_MSOP_features(const cv::Mat& image) {
 
   cv::Mat gray;
   cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
-  gray.convertTo(gray, CV_64F);
+  gray.convertTo(gray, CV_32F);
 
   MSOPDescriptor feature_descriptors;
   for (int layer = 0; layer < 5; layer++) {
