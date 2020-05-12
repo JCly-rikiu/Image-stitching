@@ -29,37 +29,41 @@ MatchPoints match_features(const std::vector<MSOPDescriptor>& feature_descriptor
         auto& [feature_points1, descriptor1] = image1[layer];
         auto& [feature_points2, descriptor2] = image2[layer];
 
+        std::vector<std::tuple<double, int, double>> j_nearest(
+            descriptor2.size(), {std::numeric_limits<double>::max(), -1, std::numeric_limits<double>::max()});
         std::vector<std::tuple<int, int>> first_matches;
         for (size_t i = 0; i != descriptor1.size(); i++) {
           cv::Mat patch_i = descriptor1[i];
 
-          std::vector<std::tuple<int, int>> distances;
+          double d1 = std::numeric_limits<double>::max(), d2 = std::numeric_limits<double>::max();
+          int j1 = 0;
           for (size_t j = 0; j != descriptor2.size(); j++) {
-            cv::Mat patch_j = descriptor2[j];
-            distances.emplace_back(cv::norm(patch_i - patch_j), j);
+            double norm = cv::norm(patch_i - descriptor2[j]);
+            if (d1 > norm) {
+              d2 = d1;
+              d1 = norm;
+              j1 = j;
+            } else if (d2 > norm) {
+              d2 = norm;
+            }
+
+            auto& [jd1, ji1, jd2] = j_nearest[j];
+            if (jd1 > norm) {
+              jd2 = jd1;
+              jd1 = norm;
+              ji1 = i;
+            } else if (jd2 > norm) {
+              jd2 = norm;
+            }
           }
 
-          std::sort(distances.begin(), distances.end());
-
-          auto [d1, j1] = distances[0];
-          auto [d2, j2] = distances[1];
           if (d1 < ratio_threshold * d2) first_matches.emplace_back(i, j1);
         }
 
         for (auto [f1, f2] : first_matches) {
-          cv::Mat patch_j = descriptor2[f2];
+          auto [jd1, ji1, jd2] = j_nearest[f2];
 
-          std::vector<std::tuple<int, int>> distances;
-          for (size_t i = 0; i != descriptor1.size(); i++) {
-            cv::Mat patch_i = descriptor1[i];
-            distances.emplace_back(cv::norm(patch_j - patch_i), i);
-          }
-
-          std::sort(distances.begin(), distances.end());
-
-          auto [d1, i1] = distances[0];
-          auto [d2, i2] = distances[1];
-          if (d1 < ratio_threshold * d2 && i1 == f1) {
+          if (jd1 < ratio_threshold * jd2 && ji1 == f1) {
             match_points1.emplace_back(std::tuple_cat(feature_points1[f1], feature_points2[f2]));
             match_points2.emplace_back(std::tuple_cat(feature_points2[f2], feature_points1[f1]));
           }
@@ -78,7 +82,7 @@ std::tuple<int, double, double> translation_RANSAC(
     const std::vector<std::tuple<double, double, double, double>>& feature_points) {
   const int k_times = 300;
   const int n_sample = 6;
-  const double error = 100;
+  const double error = 170;
 
   if (feature_points.size() < n_sample) return {0, 0, 0};
 
@@ -136,16 +140,12 @@ void search(const int current_image, const bool left_search,
             std::deque<std::tuple<int, double, double>>& list) {
   for (auto [tj, ti, next_image] : translations[current_image]) {
     if (checked[next_image]) continue;
-
-    if (left_search && tj < 0) {
-      checked[next_image] = true;
-      list.push_front({next_image, ti, tj});
-      search(next_image, true, translations, checked, list);
-    } else if (!left_search && tj >= 0) {
-      checked[next_image] = true;
-      list.push_back({next_image, ti, tj});
-      search(next_image, false, translations, checked, list);
-    }
+    checked[next_image] = true;
+    if (left_search)
+      list.emplace_front(next_image, ti, tj);
+    else
+      list.emplace_back(next_image, ti, tj);
+    search(next_image, left_search, translations, checked, list);
   }
 }
 
@@ -163,7 +163,8 @@ PanoramasLists match_images(const MatchPoints& match_points) {
       auto [max_i, ti, tj] = translation_RANSAC(match_points[image1_i][image2_i]);
 
       if (max_i != 0) {
-        std::cout << "\timage: " << image1_i << " -> " << image2_i << " : " << max_i  << " / " << match_points[image1_i][image2_i].size() << std::endl;
+        std::cout << "\timage: " << image1_i << " -> " << image2_i << " : " << max_i << " / "
+                  << match_points[image1_i][image2_i].size() << " tj = " << tj << std::endl;
         if (tj < 0)
           left_translations[image1_i].emplace_back(tj, ti, image2_i);
         else
