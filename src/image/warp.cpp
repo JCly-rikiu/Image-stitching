@@ -14,6 +14,19 @@
 const float focal_length = 4000.0 / 15.6 * 16;
 
 void cylindrical_warp_image(cv::Mat& image) {
+  cv::CylindricalWarper creator;
+  auto warper = creator.create(focal_length);
+
+  cv::Mat warp_image;
+  cv::Mat K = (cv::Mat_<float>(3, 3) << focal_length, 0, image.cols / 2, 0, focal_length, image.rows / 2, 0, 0, 1);
+  auto pos = warper->warp(image, K, cv::Mat::eye(cv::Size(3, 3), CV_32F), cv::INTER_LINEAR, cv::BORDER_CONSTANT, warp_image);
+
+  cv::Mat T = (cv::Mat_<float>(2, 3) << 1, 0, pos.x + image.cols / 2, 0, 1, 0);
+  cv::warpAffine(warp_image, warp_image, T, image.size());
+
+  image = warp_image;
+
+  /* old code
   cv::Mat warp_image = cv::Mat::zeros(image.size(), image.type());
 
   int cx = image.cols / 2;
@@ -45,6 +58,7 @@ void cylindrical_warp_image(cv::Mat& image) {
   }
 
   image = warp_image;
+  */
 }
 
 void cylindrical_warp_feature_points(std::vector<std::tuple<float, float, float, float>>& feature_points,
@@ -199,7 +213,7 @@ void warp_images_together(const std::vector<cv::Mat>& image_data, PanoramasLists
 
       cv::Mat temp(cv::Size(cols, rows), CV_8UC3);
       cv::Mat translation_mat = (cv::Mat_<float>(2, 3) << 1, 0, tj, 0, 1, ti);
-      cv::warpAffine(image_data[image], temp, translation_mat, temp.size(), cv::INTER_LINEAR);
+      cv::warpAffine(image_data[image], temp, translation_mat, temp.size());
 
       int current_left = static_cast<int>(std::ceil(tj + left));
       int current_right = static_cast<int>(std::floor(tj + right));
