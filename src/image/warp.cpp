@@ -166,7 +166,7 @@ cv::Mat crop_rectangle(cv::Mat& panoramas, const std::vector<cv::Mat>& image_dat
 }
 
 void warp_images_together(const std::vector<cv::Mat>& image_data, PanoramasLists& panoramas_lists) {
-  std::cout << "\nThere is/are " << panoramas_lists.size() << " panoramas.\n" << std::endl;
+  std::cout << "\nTotal: " << panoramas_lists.size() << " panoramas.\n" << std::endl;
 
   for (int pano_index = 1; auto& list : panoramas_lists) {
     // let all ti be positive

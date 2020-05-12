@@ -36,19 +36,5 @@ int main(int argc, char* argv[]) {
 
   warp_images_together(image_data, panoramas_lists);
 
-  // cv::Mat test;
-  // cv::hconcat(image_data[0], image_data[1], test);
-
-  // for (auto [i1, j1, i2, j2] : match_points[0][1]) {
-  //   const int x_shift = image_data[0].cols;
-
-  //   cv::circle(test, cv::Point2d(j1, i1), 10, cv::Scalar(0, 0, 255), 3);
-  //   cv::circle(test, cv::Point2d(j2 + x_shift, i2), 10, cv::Scalar(0, 0, 255), 3);
-
-  //   cv::line(test, cv::Point2d(j1, i1), cv::Point2d(j2 + x_shift, i2), cv::Scalar(0, 255, 0), 2);
-  // }
-
-  // cv::imwrite("test.jpg", test);
-
   return EXIT_SUCCESS;
 }
