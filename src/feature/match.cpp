@@ -234,7 +234,7 @@ PanoramasLists match_images(const MatchPoints& match_points) {
       tj += rj;
     }
 
-    panoramas_lists.push_back(list);
+    if (list.size() > 1) panoramas_lists.push_back(list);
   }
 
   return panoramas_lists;
