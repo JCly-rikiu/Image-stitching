@@ -21,7 +21,10 @@ int main(int argc, char* argv[]) {
   }
 
   std::vector<MSOPDescriptor> feature_descriptors;
-  for (const auto& image : image_data) feature_descriptors.push_back(get_MSOP_features(image));
+  for (int index = 0; const auto& image : image_data) {
+    std::cout << "[" << index++ << "] ";
+    feature_descriptors.push_back(get_MSOP_features(image));
+  }
 
   auto match_points = match_features(feature_descriptors);
 
