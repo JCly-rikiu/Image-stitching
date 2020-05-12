@@ -27,6 +27,15 @@ std::vector<double> calculate_orientation(const cv::Mat& image, const std::vecto
     int i = static_cast<int>(std::nearbyint(di));
     int j = static_cast<int>(std::nearbyint(dj));
 
+    if (i < 0)
+      i = 0;
+    else if (i >= blur.rows)
+      i = blur.rows - 1;
+    if (j < 0)
+      j = 0;
+    else if (j >= blur.cols)
+      j = blur.cols - 1;
+
     double x = ix.at<double>(i, j);
     double y = iy.at<double>(i, j);
 
@@ -67,7 +76,7 @@ std::vector<std::tuple<double, double>> sub_pixel_refinement(const cv::Mat& stre
 std::vector<std::tuple<int, int>> adaptive_non_maximal_supression(std::vector<std::tuple<double, int, int>>& points) {
   std::cout << "\tANMS" << std::endl;
 
-  const int feature_number = 300;
+  const int feature_number = 500;
 
   std::sort(points.begin(), points.end(), std::greater<std::tuple<double, int, int>>());
 
@@ -148,7 +157,12 @@ MSOPDescriptor get_MSOP_features(const cv::Mat& image) {
   gray.convertTo(gray, CV_64F);
 
   MSOPDescriptor feature_descriptors;
-  for (int layer = 0; layer < 3; layer++) {
+  for (int layer = 0; layer < 5; layer++) {
+    if (layer == 0) {
+      cv::pyrDown(gray, gray, cv::Size(gray.cols / 2, gray.rows / 2), cv::BORDER_REPLICATE);
+      continue;
+    }
+
     std::cout << "\t[layer " << layer << "]" << std::endl;
 
     auto [feature_points, orientations] = Harris_corner_detector(gray);
