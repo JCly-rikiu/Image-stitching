@@ -2,6 +2,7 @@
 #include <cmath>
 #include <iostream>
 #include <limits>
+#include <tuple>
 #include <vector>
 
 #include <opencv2/opencv.hpp>
@@ -66,7 +67,7 @@ std::vector<std::tuple<double, double>> sub_pixel_refinement(const cv::Mat& stre
 std::vector<std::tuple<int, int>> adaptive_non_maximal_supression(std::vector<std::tuple<double, int, int>>& points) {
   std::cout << "\tANMS" << std::endl;
 
-  const int feature_number = 500;
+  const int feature_number = 300;
 
   std::sort(points.begin(), points.end(), std::greater<std::tuple<double, int, int>>());
 
@@ -147,7 +148,7 @@ MSOPDescriptor get_MSOP_features(const cv::Mat& image) {
   gray.convertTo(gray, CV_64F);
 
   MSOPDescriptor feature_descriptors;
-  for (int layer = 0; layer < 5; layer++) {
+  for (int layer = 0; layer < 3; layer++) {
     std::cout << "\t[layer " << layer << "]" << std::endl;
 
     auto [feature_points, orientations] = Harris_corner_detector(gray);

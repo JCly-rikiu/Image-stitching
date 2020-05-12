@@ -1,4 +1,7 @@
+#include <algorithm>
+#include <cmath>
 #include <iostream>
+#include <tuple>
 #include <vector>
 
 #include <opencv2/opencv.hpp>

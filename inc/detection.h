@@ -1,6 +1,7 @@
 #ifndef DETECTION_
 #define DETECTION_
 
+#include <tuple>
 #include <vector>
 
 #include <opencv2/opencv.hpp>
