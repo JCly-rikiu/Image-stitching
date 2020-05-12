@@ -12,8 +12,7 @@ cv::Mat get_descriptors(const cv::Mat& image, const std::vector<std::tuple<float
                         const std::vector<float>& orientations) {
   std::cout << "\tget descriptor" << std::endl;
 
-  const int patch_half_size = 20;
-  const int patch_size = patch_half_size * 2;
+  const int patch_size = 40;
 
   cv::Mat blur;
   cv::GaussianBlur(image, blur, cv::Size(), 1.0, 1.0, cv::BORDER_REPLICATE);
