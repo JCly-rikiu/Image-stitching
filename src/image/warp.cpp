@@ -1,5 +1,6 @@
 #include <algorithm>
 #include <cmath>
+#include <deque>
 #include <iostream>
 #include <tuple>
 #include <vector>
@@ -9,7 +10,8 @@
 #include "match.h"
 #include "warp.h"
 
-const double focal_length = 706.0;
+// const double focal_length = 706.0;
+const double focal_length = 4000.0 / 15.6 * 16;
 
 void cylindrical_warp_image(cv::Mat& image) {
   cv::Mat warp_image = cv::Mat::zeros(image.size(), image.type());
@@ -79,9 +81,13 @@ void alpha_blend(cv::Mat& panoramas, cv::Mat& temp, const int left, const int ri
       auto p = pc.at<cv::Vec3b>(i, 0);
       if (p[0] == 0 && p[1] == 0 && p[2] == 0) pc.at<cv::Vec3b>(i, 0) = t;
 
-      if (blend && (t[0] != 0 || t[1] != 0 || t[2] != 0)) {
-        double alpha = static_cast<double>(j - left) / (right - left);
-        pc.at<cv::Vec3b>(i, 0) = (1 - alpha) * p + alpha * t;
+      if (t[0] != 0 || t[1] != 0 || t[2] != 0) {
+        if (blend) {
+          double alpha = static_cast<double>(j - left) / (right - left);
+          pc.at<cv::Vec3b>(i, 0) = (1 - alpha) * p + alpha * t;
+        } else {
+          pc.at<cv::Vec3b>(i, 0) = t;
+        }
       }
     }
   }
@@ -89,7 +95,7 @@ void alpha_blend(cv::Mat& panoramas, cv::Mat& temp, const int left, const int ri
 
 void alpha_blend_image(cv::Mat& panoramas, cv::Mat& temp, const int current_left, const int current_right,
                        const int last_right) {
-  const int blend_half_width = 70;
+  const int blend_half_width = 150;
   if (last_right == 0) {
     alpha_blend(panoramas, temp, current_left, current_right, false);
   } else if (last_right - current_left < blend_half_width * 2) {
@@ -160,7 +166,7 @@ cv::Mat crop_rectangle(cv::Mat& panoramas, const std::vector<cv::Mat>& image_dat
 }
 
 void warp_images_together(const std::vector<cv::Mat>& image_data, PanoramasLists& panoramas_lists) {
-  std::cout << "\nThere is/are " << panoramas_lists.size() << " panoramas." << std::endl;
+  std::cout << "\nThere is/are " << panoramas_lists.size() << " panoramas.\n" << std::endl;
 
   for (int pano_index = 1; auto& list : panoramas_lists) {
     // let all ti be positive
@@ -172,10 +178,11 @@ void warp_images_together(const std::vector<cv::Mat>& image_data, PanoramasLists
       max_ti = std::max(max_ti, ti + image_data[image].rows);
     }
 
-    std::cout << "[Blend images...]" << std::endl;
     std::cout << "[pano " << pano_index << "]:";
     for (auto [image, ti, tj] : list) std::cout << " -> [" << image << " " << ti << " " << tj << "]";
     std::cout << std::endl;
+
+    std::cout << "\tblend images" << std::endl;
 
     auto [first_image, first_ti, first_tj] = list.front();
     auto [back_image, back_ti, back_tj] = list.back();
@@ -204,10 +211,11 @@ void warp_images_together(const std::vector<cv::Mat>& image_data, PanoramasLists
 
     if (first_image == back_image && list.size() > 1) drift_correction(panoramas, image_data, list);
 
+    std::cout << "\tSave panoramas to ./pano" + std::to_string(pano_index) + ".jpg" << std::endl;
     cv::imwrite("pano" + std::to_string(pano_index) + ".jpg", panoramas);
 
     cv::Mat crop = crop_rectangle(panoramas, image_data, list);
-
+    std::cout << "\tSave crop image to ./pano-crop" + std::to_string(pano_index) + ".jpg" << std::endl;
     cv::imwrite("pano-crop" + std::to_string(pano_index) + ".jpg", crop);
 
     pano_index++;
