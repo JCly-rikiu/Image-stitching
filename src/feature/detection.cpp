@@ -155,7 +155,14 @@ MSOPDescriptor get_MSOP_features(const cv::Mat& image) {
 
     cv::pyrDown(gray, gray, cv::Size(gray.cols / 2, gray.rows / 2), cv::BORDER_REPLICATE);
 
-    feature_descriptors.emplace_back(feature_points, get_descriptors(gray, feature_points, orientations));
+    auto descriptors = get_descriptors(gray, feature_points, orientations);
+
+    for (auto& [i, j] : feature_points) {
+      i *= std::pow(2, layer);
+      j *= std::pow(2, layer);
+    }
+
+    feature_descriptors.emplace_back(feature_points, descriptors);
   }
 
   return feature_descriptors;

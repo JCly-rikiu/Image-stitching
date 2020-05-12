@@ -60,14 +60,8 @@ MatchPoints match_features(const std::vector<MSOPDescriptor>& feature_descriptor
           auto [d1, i1] = distances[0];
           auto [d2, i2] = distances[1];
           if (d1 < ratio_threshold * d2 && i1 == f1) {
-            // feature points (x, y), not index
-            auto [di1, dj1] = feature_points1[f1];
-            auto [di2, dj2] = feature_points2[f2];
-
-            match_points1.emplace_back(di1 * std::pow(2, layer), dj1 * std::pow(2, layer), di2 * std::pow(2, layer),
-                                       dj2 * std::pow(2, layer));
-            match_points2.emplace_back(di2 * std::pow(2, layer), dj2 * std::pow(2, layer), di1 * std::pow(2, layer),
-                                       dj1 * std::pow(2, layer));
+            match_points1.emplace_back(std::tuple_cat(feature_points1[f1], feature_points1[f2]));
+            match_points2.emplace_back(std::tuple_cat(feature_points2[f2], feature_points1[f1]));
           }
         }
       }
