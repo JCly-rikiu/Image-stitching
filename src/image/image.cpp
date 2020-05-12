@@ -1,6 +1,5 @@
-#include <fstream>
+#include <filesystem>
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <vector>
 
@@ -12,25 +11,19 @@ std::vector<cv::Mat> load_images(std::string& image_dir) {
   std::cout << "[Loading images...]" << std::endl;
 
   std::vector<cv::Mat> images;
-
-  std::ifstream infile(image_dir + "image_list.txt");
-  if (infile.fail()) {
-    std::cerr << "Fail to read image_list.txt!" << std::endl;
-    return images;
-  }
-
-  std::string line;
-  while (std::getline(infile, line)) {
-    std::istringstream line_stream(line);
+  for (const auto& entry : std::filesystem::directory_iterator(image_dir)) {
     std::string filename;
-    if (!(line_stream >> filename)) break;
+    if (entry.path().extension().compare(".jpg") == 0)
+      filename = entry.path().filename();
+    else if (entry.path().extension().compare(".JPG") == 0)
+      filename = entry.path().filename();
+    else
+      continue;
 
-    cv::Mat image;
-    image = cv::imread(image_dir + filename, cv::IMREAD_COLOR);
-    if (!image.data)
-      std::cerr << "Could not open or find " << filename << std::endl;
-
+    cv::Mat image = cv::imread(image_dir + filename, cv::IMREAD_COLOR);
+    if (!image.data) std::cerr << "Could not open or find " << filename << std::endl;
     images.push_back(image);
+    std::cout << "\t[" << images.size() - 1 << "] " << filename << std::endl;
   }
 
   return images;
