@@ -60,7 +60,7 @@ MatchPoints match_features(const std::vector<MSOPDescriptor>& feature_descriptor
           auto [d1, i1] = distances[0];
           auto [d2, i2] = distances[1];
           if (d1 < ratio_threshold * d2 && i1 == f1) {
-            match_points1.emplace_back(std::tuple_cat(feature_points1[f1], feature_points1[f2]));
+            match_points1.emplace_back(std::tuple_cat(feature_points1[f1], feature_points2[f2]));
             match_points2.emplace_back(std::tuple_cat(feature_points2[f2], feature_points1[f1]));
           }
         }
@@ -77,8 +77,8 @@ MatchPoints match_features(const std::vector<MSOPDescriptor>& feature_descriptor
 std::tuple<int, double, double> translation_RANSAC(
     const std::vector<std::tuple<double, double, double, double>>& feature_points) {
   const int k_times = 300;
-  const int n_sample = 3;
-  const double error = 9;
+  const int n_sample = 6;
+  const double error = 100;
 
   if (feature_points.size() < n_sample) return {0, 0, 0};
 
@@ -112,8 +112,6 @@ std::tuple<int, double, double> translation_RANSAC(
       best_tj = tj;
     }
   }
-
-  std::cout << "max " << max_num_inlier << " " << feature_points.size() << std::endl;
 
   if (max_num_inlier < 5.9 + 0.22 * feature_points.size()) return {0, best_ti, best_tj};
 
@@ -164,10 +162,8 @@ PanoramasLists match_images(const MatchPoints& match_points) {
       if (image1_i == image2_i) continue;
       auto [max_i, ti, tj] = translation_RANSAC(match_points[image1_i][image2_i]);
 
-      std::cout << "image: " << image1_i << " " << image2_i << std::endl;
-      std::cout << max_i << " " << ti << " " << tj << std::endl;
-
       if (max_i != 0) {
+        std::cout << "\timage: " << image1_i << " -> " << image2_i << " : " << max_i  << " / " << match_points[image1_i][image2_i].size() << std::endl;
         if (tj < 0)
           left_translations[image1_i].emplace_back(tj, ti, image2_i);
         else
