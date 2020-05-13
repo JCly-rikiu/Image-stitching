@@ -23,7 +23,7 @@ std::vector<float> calculate_orientation(const cv::Mat& image, const std::vector
   cv::Sobel(blur, iy, -1, 0, 1, 1);
 
   std::vector<float> orientation;
-  for (const auto& [di, dj] : points) {
+  for (const auto [di, dj] : points) {
     int i = static_cast<int>(std::nearbyint(di));
     int j = static_cast<int>(std::nearbyint(dj));
 
@@ -51,7 +51,7 @@ std::vector<std::tuple<float, float>> sub_pixel_refinement(const cv::Mat& streng
   std::cout << " -> subpixel refinement" << std::flush;
 
   std::vector<std::tuple<float, float>> feature_points;
-  for (const auto& [i, j] : points) {
+  for (const auto [i, j] : points) {
     cv::Mat f;
     cv::getRectSubPix(strength, cv::Size(3, 3), cv::Point2f(j, i), f);
 
@@ -80,11 +80,11 @@ std::vector<std::tuple<int, int>> adaptive_non_maximal_supression(std::vector<st
 
   std::vector<std::tuple<int, int, int>> candidates;
   for (auto current = points.begin(); current != points.end(); current++) {
-    const auto& [current_s, current_i, current_j] = *current;
+    auto [current_s, current_i, current_j] = *current;
 
     auto min_radius = std::numeric_limits<int>::max();
     for (auto previous = points.begin(); previous != current; previous++) {
-      const auto& [previous_s, previous_i, previous_j] = *previous;
+      auto [previous_s, previous_i, previous_j] = *previous;
 
       auto radius =
           (current_i - previous_i) * (current_i - previous_i) + (current_j - previous_j) * (current_j - previous_j);
@@ -98,7 +98,7 @@ std::vector<std::tuple<int, int>> adaptive_non_maximal_supression(std::vector<st
   if (candidates.size() > feature_number) candidates.resize(feature_number);
 
   std::vector<std::tuple<int, int>> feature_points;
-  for (const auto& [s, i, j] : candidates) feature_points.emplace_back(i, j);
+  for (const auto [s, i, j] : candidates) feature_points.emplace_back(i, j);
   std::cout << "raidus: " << std::get<0>(candidates.back()) << std::flush;
 
   return feature_points;

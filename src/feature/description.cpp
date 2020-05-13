@@ -40,7 +40,7 @@ cv::Mat get_descriptors(const cv::Mat& image, const std::vector<std::tuple<float
 
     cv::meanStdDev(patch, mean, stddev);
     patch = (patch - mean) / stddev;
-    cv::patchNaNs(patch);
+    cv::patchNaNs(patch);  // Nan may cause problem in cv::flann
 
     descriptors.push_back(patch.reshape(1, 64).t());
   }
