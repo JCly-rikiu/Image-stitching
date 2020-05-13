@@ -18,7 +18,8 @@ void cylindrical_warp_image(cv::Mat& image) {
 
   cv::Mat warp_image;
   cv::Mat K = (cv::Mat_<float>(3, 3) << focal_length, 0, image.cols / 2, 0, focal_length, image.rows / 2, 0, 0, 1);
-  auto pos = warper->warp(image, K, cv::Mat::eye(cv::Size(3, 3), CV_32F), cv::INTER_LINEAR, cv::BORDER_CONSTANT, warp_image);
+  auto pos =
+      warper->warp(image, K, cv::Mat::eye(cv::Size(3, 3), CV_32F), cv::INTER_LINEAR, cv::BORDER_CONSTANT, warp_image);
 
   cv::Mat T = (cv::Mat_<float>(2, 3) << 1, 0, pos.x + image.cols / 2, 0, 1, 0);
   cv::warpAffine(warp_image, warp_image, T, image.size());
@@ -121,9 +122,8 @@ void alpha_blend_image(cv::Mat& panoramas, cv::Mat& temp, const int current_left
   }
 }
 
-void drift_correction(cv::Mat& panoramas, const std::vector<cv::Mat>& image_data,
-                      std::deque<std::tuple<int, float, float>>& list) {
-  std::cout << "\tdrift correction" << std::endl;
+void drift_correction(cv::Mat& panoramas, std::deque<std::tuple<int, float, float>>& list) {
+  std::cout << "\tapply drift correction (360 degree paronama detected)" << std::endl;
 
   auto [first_image, first_ti, first_tj] = list.front();
   auto [back_image, back_ti, back_tj] = list.back();
@@ -131,21 +131,10 @@ void drift_correction(cv::Mat& panoramas, const std::vector<cv::Mat>& image_data
   float drift = first_ti - back_ti;  // -(back_ti - first_ti)
   float length = back_tj - first_tj;
 
-  int half_col = image_data[back_image].cols / 2;
-  float left = focal_length * std::atan(-half_col / focal_length) + half_col;
-  float right = focal_length * std::atan(half_col / focal_length) + half_col;
-  for (int j = static_cast<int>(std::ceil(back_tj + left)); j != static_cast<int>(std::floor(back_tj + right)); j++) {
-    auto pc = panoramas.col(j).clone();
-    panoramas.col(j).setTo(cv::Scalar(0, 0, 0));
-    cv::Mat translation_mat = (cv::Mat_<float>(2, 3) << 1, 0, j, 0, 1, drift);
-    cv::warpAffine(pc, panoramas, translation_mat, panoramas.size(), cv::INTER_NEAREST, cv::BORDER_TRANSPARENT);
-  }
-  for (int j = 0; j != static_cast<int>(std::ceil(back_tj + left)); j++) {
-    auto pc = panoramas.col(j).clone();
-    panoramas.col(j).setTo(cv::Scalar(0, 0, 0));
-    cv::Mat translation_mat = (cv::Mat_<float>(2, 3) << 1, 0, j, 0, 1, j / length * drift);
-    cv::warpAffine(pc, panoramas, translation_mat, panoramas.size(), cv::INTER_NEAREST, cv::BORDER_TRANSPARENT);
-  }
+  cv::Mat shear_mat = (cv::Mat_<float>(2, 3) << 1, 0, 0, drift / length, 1, 0);
+  cv::warpAffine(panoramas, panoramas, shear_mat, panoramas.size());
+
+  for (auto& [image, ti, tj] : list) ti += tj * drift / length;
 }
 
 cv::Mat crop_rectangle(cv::Mat& panoramas, const std::vector<cv::Mat>& image_data,
@@ -178,13 +167,13 @@ cv::Mat crop_rectangle(cv::Mat& panoramas, const std::vector<cv::Mat>& image_dat
   return panoramas(cv::Rect(left, top, right + 1 - left, bottom + 1 - top)).clone();
 }
 
-void warp_images_together(const std::vector<cv::Mat>& image_data, PanoramasLists& panoramas_lists) {
-  std::cout << "\nTotal: " << panoramas_lists.size() << " panoramas.\n" << std::endl;
+void warp_images_together(const std::vector<cv::Mat>& image_data, PanoramaLists& panorama_lists) {
+  std::cout << "\nTotal: " << panorama_lists.size() << " panoramas.\n" << std::endl;
 
   std::cout << "[Blend images...]" << std::endl;
 
-  for (int pano_index = 1; auto& list : panoramas_lists) {
-    std::cout << "\n[pano " << pano_index << "]:";
+  for (int pano_index = 1; auto& list : panorama_lists) {
+    std::cout << "\n[panorama " << pano_index << "]:";
 
     // Let all ti be positive
     float min_ti = 0;
@@ -223,14 +212,14 @@ void warp_images_together(const std::vector<cv::Mat>& image_data, PanoramasLists
     }
     std::cout << std::endl;
 
-    // if (first_image == back_image && list.size() > 1) drift_correction(panoramas, image_data, list);
+    if (first_image == back_image && list.size() > 1) drift_correction(panoramas, list);
 
-    std::cout << "\tSave panoramas to ./pano" + std::to_string(pano_index) + ".jpg" << std::endl;
-    cv::imwrite("pano" + std::to_string(pano_index) + ".jpg", panoramas);
+    std::cout << "\tSave panorama to ./panorama" + std::to_string(pano_index) + ".jpg" << std::endl;
+    cv::imwrite("panorama" + std::to_string(pano_index) + ".jpg", panoramas);
 
     cv::Mat crop = crop_rectangle(panoramas, image_data, list);
-    std::cout << "\tSave crop image to ./pano-crop" + std::to_string(pano_index) + ".jpg" << std::endl;
-    cv::imwrite("pano-crop" + std::to_string(pano_index) + ".jpg", crop);
+    std::cout << "\tSave cropped image to ./panorama-crop" + std::to_string(pano_index) + ".jpg" << std::endl;
+    cv::imwrite("panorama-crop" + std::to_string(pano_index) + ".jpg", crop);
 
     pano_index++;
   }

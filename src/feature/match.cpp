@@ -133,7 +133,7 @@ void search(const int current_image, const bool left_search,
   }
 }
 
-PanoramasLists match_images(const MatchPoints& match_points) {
+PanoramaLists match_images(const MatchPoints& match_points) {
   std::cout << "[Match images...]" << std::endl;
 
   auto num_image = match_points.size();
@@ -161,7 +161,7 @@ PanoramasLists match_images(const MatchPoints& match_points) {
   }
 
   std::vector<bool> checked(num_image, false);
-  PanoramasLists panoramas_lists;
+  PanoramaLists panorama_lists;
   for (size_t i = 0; i != num_image; i++) {
     if (checked[i]) continue;
     std::deque<std::tuple<int, float, float>> list;
@@ -209,8 +209,8 @@ PanoramasLists match_images(const MatchPoints& match_points) {
       tj += rj;
     }
 
-    if (list.size() > 1) panoramas_lists.push_back(list);
+    if (list.size() > 1) panorama_lists.push_back(list);
   }
 
-  return panoramas_lists;
+  return panorama_lists;
 }
