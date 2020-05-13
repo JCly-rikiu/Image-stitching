@@ -122,19 +122,14 @@ void alpha_blend_image(cv::Mat& panoramas, cv::Mat& temp, const int current_left
   }
 }
 
-void drift_correction(cv::Mat& panoramas, std::deque<std::tuple<int, float, float>>& list) {
+void drift_correction(cv::Mat& panoramas, std::deque<std::tuple<int, float, float>>& list,
+                      const float drift_correction_value) {
   std::cout << "\tapply drift correction (360 degree paronama detected)" << std::endl;
 
-  auto [first_image, first_ti, first_tj] = list.front();
-  auto [back_image, back_ti, back_tj] = list.back();
-
-  float drift = first_ti - back_ti;  // -(back_ti - first_ti)
-  float length = back_tj - first_tj;
-
-  cv::Mat shear_mat = (cv::Mat_<float>(2, 3) << 1, 0, 0, drift / length, 1, 0);
+  cv::Mat shear_mat = (cv::Mat_<float>(2, 3) << 1, 0, 0, drift_correction_value, 1, 0);
   cv::warpAffine(panoramas, panoramas, shear_mat, panoramas.size());
 
-  for (auto& [image, ti, tj] : list) ti += tj * drift / length;
+  for (auto& [image, ti, tj] : list) ti += tj * drift_correction_value;
 }
 
 cv::Mat crop_rectangle(cv::Mat& panoramas, const std::vector<cv::Mat>& image_data,
@@ -187,6 +182,15 @@ void warp_images_together(const std::vector<cv::Mat>& image_data, PanoramaLists&
     auto [first_image, first_ti, first_tj] = list.front();
     auto [back_image, back_ti, back_tj] = list.back();
 
+    bool is_360 = false;
+    float drift_correction_value = 1;
+    if (first_image == back_image && list.size() > 1) {
+      is_360 = true;
+      drift_correction_value = (first_ti - back_ti) / (back_tj - first_tj);  // -(back_ti - first_ti)
+      list.pop_back();
+      std::tie(back_image, back_ti, back_tj) = list.back();
+    }
+
     int rows = static_cast<int>(std::ceil(max_ti));
     int cols = static_cast<int>(std::ceil(back_tj)) + image_data[back_image].cols;
     cv::Mat panoramas = cv::Mat::zeros(cv::Size(cols, rows), CV_8UC3);
@@ -212,14 +216,14 @@ void warp_images_together(const std::vector<cv::Mat>& image_data, PanoramaLists&
     }
     std::cout << std::endl;
 
-    if (first_image == back_image && list.size() > 1) drift_correction(panoramas, list);
+    if (is_360) drift_correction(panoramas, list, drift_correction_value);
 
     std::cout << "\tSave panorama to ./panorama" + std::to_string(pano_index) + ".jpg" << std::endl;
     cv::imwrite("panorama" + std::to_string(pano_index) + ".jpg", panoramas);
 
     cv::Mat crop = crop_rectangle(panoramas, image_data, list);
-    std::cout << "\tSave cropped image to ./panorama-crop" + std::to_string(pano_index) + ".jpg" << std::endl;
-    cv::imwrite("panorama-crop" + std::to_string(pano_index) + ".jpg", crop);
+    std::cout << "\tSave cropped image to ./panorama" + std::to_string(pano_index) + "-crop.jpg" << std::endl;
+    cv::imwrite("panorama" + std::to_string(pano_index) + "-crop.jpg", crop);
 
     pano_index++;
   }
