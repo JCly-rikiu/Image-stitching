@@ -109,7 +109,7 @@ void alpha_blend(cv::Mat& panoramas, cv::Mat& temp, const int left, const int ri
 
 void alpha_blend_image(cv::Mat& panoramas, cv::Mat& temp, const int current_left, const int current_right,
                        const int last_right) {
-  const int blend_half_width = 150;
+  const int blend_half_width = 30;
   if (last_right == 0) {
     alpha_blend(panoramas, temp, current_left, current_right, false);
   } else if (last_right - current_left < blend_half_width * 2) {
@@ -144,7 +144,7 @@ cv::Mat crop_rectangle(cv::Mat& panoramas, const std::vector<cv::Mat>& image_dat
 
   int top = 0;
   int bottom = panoramas.rows;
-  for (auto [image, ti, tj] : list) {
+  for (const auto [image, ti, tj] : list) {
     int cx = image_data[image].cols / 2;
     int cy = image_data[image].rows / 2;
 
@@ -163,8 +163,6 @@ cv::Mat crop_rectangle(cv::Mat& panoramas, const std::vector<cv::Mat>& image_dat
 }
 
 void warp_images_together(const std::vector<cv::Mat>& image_data, PanoramaLists& panorama_lists) {
-  std::cout << "\nTotal: " << panorama_lists.size() << " panoramas.\n" << std::endl;
-
   std::cout << "[Blend images...]" << std::endl;
 
   for (int pano_index = 1; auto& list : panorama_lists) {
@@ -172,7 +170,7 @@ void warp_images_together(const std::vector<cv::Mat>& image_data, PanoramaLists&
 
     // Let all ti be positive
     float min_ti = 0;
-    for (auto [image, ti, tj] : list) min_ti = std::min(min_ti, ti);
+    for (const auto [image, ti, tj] : list) min_ti = std::min(min_ti, ti);
     float max_ti = 0;
     for (auto& [image, ti, tj] : list) {
       ti -= min_ti;
@@ -224,6 +222,39 @@ void warp_images_together(const std::vector<cv::Mat>& image_data, PanoramaLists&
     cv::Mat crop = crop_rectangle(panoramas, image_data, list);
     std::cout << "\tSave cropped image to ./panorama" + std::to_string(pano_index) + "-crop.jpg" << std::endl;
     cv::imwrite("panorama" + std::to_string(pano_index) + "-crop.jpg", crop);
+
+    pano_index++;
+  }
+}
+
+void draw_matched_features(const std::vector<cv::Mat>& image_data, const PanoramaLists& panorama_lists,
+                           const MatchPoints& match_points) {
+  std::cout << "[Draw matched features...]" << std::endl;
+
+  for (int pano_index = 1; auto& list : panorama_lists) {
+    auto [first_image, first_ti, first_tj] = list.front();
+
+    int last_image = first_image;
+    for (auto [image, ti, tj] : list) {
+      if (image == first_image)
+        continue;
+
+      cv::Mat to;
+      cv::hconcat(image_data[last_image], image_data[image], to);
+      for (const auto [i1, j1, i2, j2] : match_points[last_image][image]) {
+        const int x_shift = image_data[last_image].cols;
+
+        cv::circle(to, cv::Point2d(j1, i1), 10, cv::Scalar(0, 0, 255), 3);
+        cv::circle(to, cv::Point2d(j2 + x_shift, i2), 10, cv::Scalar(0, 0, 255), 3);
+
+        cv::line(to, cv::Point2d(j1, i1), cv::Point2d(j2 + x_shift, i2), cv::Scalar(0, 255, 0), 2);
+      }
+      cv::imwrite("pano" + std::to_string(pano_index) + "-" + std::to_string(last_image) + "to" +
+                      std::to_string(image) + ".jpg",
+                  to);
+
+      last_image = image;
+    }
 
     pano_index++;
   }

@@ -63,12 +63,15 @@ MatchPoints match_features(const std::vector<MSOPDescriptor>& feature_descriptor
 }
 
 std::tuple<int, float, float> translation_RANSAC(
-    const std::vector<std::tuple<float, float, float, float>>& feature_points) {
+    std::vector<std::tuple<float, float, float, float>>& feature_points) {
   const int k_times = 300;
   const int n_sample = 6;
-  const float error = 170;
+  const float error = 500;
 
-  if (feature_points.size() < n_sample) return {0, 0, 0};
+  if (feature_points.size() < n_sample) {
+    feature_points.resize(0);
+    return {0, 0, 0};
+  }
 
   std::random_device rd;
   std::mt19937 gen(rd());
@@ -87,7 +90,7 @@ std::tuple<int, float, float> translation_RANSAC(
     tj /= n_sample;
 
     int num_inliers = 0;
-    for (auto [i1, j1, i2, j2] : feature_points) {
+    for (const auto [i1, j1, i2, j2] : feature_points) {
       float ei = i2 + ti - i1;
       float ej = j2 + tj - j1;
 
@@ -101,16 +104,23 @@ std::tuple<int, float, float> translation_RANSAC(
     }
   }
 
-  if (max_num_inlier < 5.9 + 0.22 * feature_points.size()) return {0, best_ti, best_tj};
+  if (max_num_inlier < 5.9 + 0.22 * feature_points.size()) {
+    feature_points.resize(0);
+    return {0, best_ti, best_tj};
+  }
 
   float final_ti = 0, final_tj = 0;
-  for (auto [i1, j1, i2, j2] : feature_points) {
+  for (auto it = feature_points.begin(); it != feature_points.end();) {
+    const auto [i1, j1, i2, j2] = *it;
     float ei = i2 + best_ti - i1;
     float ej = j2 + best_tj - j1;
 
     if (ei * ei + ej * ej < error) {
       final_ti += i1 - i2;
       final_tj += j1 - j2;
+      it++;
+    } else {
+      it = feature_points.erase(it);
     }
   }
   final_ti /= max_num_inlier;
@@ -122,7 +132,7 @@ std::tuple<int, float, float> translation_RANSAC(
 void search(const int current_image, const bool left_search,
             const std::vector<std::vector<std::tuple<float, float, int>>>& translations, std::vector<bool>& checked,
             std::deque<std::tuple<int, float, float>>& list) {
-  for (auto [tj, ti, next_image] : translations[current_image]) {
+  for (const auto [tj, ti, next_image] : translations[current_image]) {
     if (checked[next_image]) continue;
     checked[next_image] = true;
     if (left_search)
@@ -133,7 +143,7 @@ void search(const int current_image, const bool left_search,
   }
 }
 
-PanoramaLists match_images(const MatchPoints& match_points) {
+PanoramaLists match_images(MatchPoints& match_points) {
   std::cout << "[Match images...]" << std::endl;
 
   auto num_image = match_points.size();
@@ -212,5 +222,6 @@ PanoramaLists match_images(const MatchPoints& match_points) {
     if (list.size() > 1) panorama_lists.push_back(list);
   }
 
+  std::cout << "\nTotal: " << panorama_lists.size() << " panoramas.\n" << std::endl;
   return panorama_lists;
 }
