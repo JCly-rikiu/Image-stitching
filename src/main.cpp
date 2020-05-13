@@ -29,11 +29,14 @@ int main(int argc, char* argv[]) {
   auto match_points = match_features(feature_descriptors);
 
   std::cout << "[Warp cylindrical...]" << std::endl;
+  std::cout << "\t" << std::flush;
   for (size_t i = 0; i != image_data.size(); i++) {
+    std::cout << "[" << i << "] " << std::flush;
     for (auto& v : match_points[i])
       cylindrical_warp_feature_points(v, image_data[i].rows, image_data[i].cols);
     cylindrical_warp_image(image_data[i]);
   }
+  std::cout << std::endl;
 
   auto panoramas_lists = match_images(match_points);
 

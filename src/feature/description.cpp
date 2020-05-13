@@ -10,7 +10,7 @@
 
 cv::Mat get_descriptors(const cv::Mat& image, const std::vector<std::tuple<float, float>>& feature_points,
                         const std::vector<float>& orientations) {
-  std::cout << "\tget descriptor" << std::endl;
+  std::cout << " -> descriptor" << std::flush;
 
   const int patch_size = 40;
 

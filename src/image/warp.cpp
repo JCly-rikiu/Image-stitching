@@ -10,7 +10,6 @@
 #include "match.h"
 #include "warp.h"
 
-// const double focal_length = 706.0;
 const float focal_length = 4000.0 / 15.6 * 16;
 
 void cylindrical_warp_image(cv::Mat& image) {
@@ -123,13 +122,13 @@ void alpha_blend_image(cv::Mat& panoramas, cv::Mat& temp, const int current_left
 }
 
 void drift_correction(cv::Mat& panoramas, const std::vector<cv::Mat>& image_data,
-                      const std::deque<std::tuple<int, float, float>>& list) {
+                      std::deque<std::tuple<int, float, float>>& list) {
   std::cout << "\tdrift correction" << std::endl;
 
   auto [first_image, first_ti, first_tj] = list.front();
   auto [back_image, back_ti, back_tj] = list.back();
 
-  float drift = first_ti - back_ti;
+  float drift = first_ti - back_ti;  // -(back_ti - first_ti)
   float length = back_tj - first_tj;
 
   int half_col = image_data[back_image].cols / 2;
@@ -182,8 +181,12 @@ cv::Mat crop_rectangle(cv::Mat& panoramas, const std::vector<cv::Mat>& image_dat
 void warp_images_together(const std::vector<cv::Mat>& image_data, PanoramasLists& panoramas_lists) {
   std::cout << "\nTotal: " << panoramas_lists.size() << " panoramas.\n" << std::endl;
 
+  std::cout << "[Blend images...]" << std::endl;
+
   for (int pano_index = 1; auto& list : panoramas_lists) {
-    // let all ti be positive
+    std::cout << "\n[pano " << pano_index << "]:";
+
+    // Let all ti be positive
     float min_ti = 0;
     for (auto [image, ti, tj] : list) min_ti = std::min(min_ti, ti);
     float max_ti = 0;
@@ -191,12 +194,6 @@ void warp_images_together(const std::vector<cv::Mat>& image_data, PanoramasLists
       ti -= min_ti;
       max_ti = std::max(max_ti, ti + image_data[image].rows);
     }
-
-    std::cout << "[pano " << pano_index << "]:";
-    for (auto [image, ti, tj] : list) std::cout << " -> [" << image << " " << ti << " " << tj << "]";
-    std::cout << std::endl;
-
-    std::cout << "\tblend images" << std::endl;
 
     auto [first_image, first_ti, first_tj] = list.front();
     auto [back_image, back_ti, back_tj] = list.back();
@@ -207,6 +204,8 @@ void warp_images_together(const std::vector<cv::Mat>& image_data, PanoramasLists
 
     int last_right = 0;
     for (auto [image, ti, tj] : list) {
+      std::cout << " -> [" << image << " (" << ti << " " << tj << ")]" << std::flush;
+
       int half_col = image_data[image].cols / 2;
       float left = focal_length * std::atan(-half_col / focal_length) + half_col;
       float right = focal_length * std::atan(half_col / focal_length) + half_col;
@@ -222,6 +221,7 @@ void warp_images_together(const std::vector<cv::Mat>& image_data, PanoramasLists
 
       last_right = current_right;
     }
+    std::cout << std::endl;
 
     // if (first_image == back_image && list.size() > 1) drift_correction(panoramas, image_data, list);
 

@@ -167,21 +167,21 @@ PanoramasLists match_images(const MatchPoints& match_points) {
     std::deque<std::tuple<int, float, float>> list;
     list.push_back({i, 0, 0});
 
-    // check the current image index late
-    // if there is a 360 degree panoramas, it will generate a double head deque
-    // the double head can help the drift corrections
-    // notic we must search for right first
+    // Set checked[current_image_index] later
+    // If there exists a 360 degree panoramas, it should generate a double head deque
+    // the double head deque activates the drift correction
+    // Notice we must search for right translations (connections) first, in order to find the original head
     search(i, false, right_translations, checked, list);
     search(i, true, left_translations, checked, list);
     checked[i] = true;
 
-    // since we search for right first, the first head is the original head
+    // Since we searched for right translations (connections) first, the first head is the original head
     auto zero_it = std::find_if(list.begin(), list.end(), [&](const auto& e) {
       auto [image, ti, tj] = e;
       return image == static_cast<int>(i);
     });
 
-    // recover the positive translations
+    // Recover the positive translations
     float ri = 0, rj = 0;
     for (auto it = zero_it; it < list.end(); it++) {
       auto& [image, ti, tj] = *it;
@@ -191,7 +191,7 @@ PanoramasLists match_images(const MatchPoints& match_points) {
       tj = rj;
     }
 
-    // recover the negative translations
+    // Recover the negative translations
     ri = 0, rj = 0;
     for (auto it = zero_it; it >= list.begin(); it--) {
       auto& [image, ti, tj] = *it;
@@ -201,7 +201,7 @@ PanoramasLists match_images(const MatchPoints& match_points) {
       tj = rj;
     }
 
-    // recover all translations
+    // Recover all translations
     ri = -ri;
     rj = -rj;
     for (auto& [image, ti, tj] : list) {

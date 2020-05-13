@@ -13,7 +13,7 @@
 const float radian_to_degree = 180 / std::acos(-1);
 
 std::vector<float> calculate_orientation(const cv::Mat& image, const std::vector<std::tuple<float, float>>& points) {
-  std::cout << "\tcalculate orientation" << std::endl;
+  std::cout << " -> orientation" << std::flush;
 
   cv::Mat blur;
   cv::GaussianBlur(image, blur, cv::Size(), 4.5, 4.5, cv::BORDER_REPLICATE);
@@ -47,16 +47,14 @@ std::vector<float> calculate_orientation(const cv::Mat& image, const std::vector
 }
 
 std::vector<std::tuple<float, float>> sub_pixel_refinement(const cv::Mat& strength,
-                                                             const std::vector<std::tuple<int, int>>& points) {
-  std::cout << "\tsub pixel refinement" << std::endl;
-
-  cv::Mat strength_b;
-  // Make border for ROI out of bound issue
-  cv::copyMakeBorder(strength, strength_b, 1, 1, 1, 1, cv::BORDER_REPLICATE);
+                                                           const std::vector<std::tuple<int, int>>& points) {
+  std::cout << " -> subpixel refinement" << std::flush;
 
   std::vector<std::tuple<float, float>> feature_points;
   for (const auto& [i, j] : points) {
-    cv::Mat f(strength_b, cv::Rect(j, i, 3, 3));
+    cv::Mat f;
+    cv::getRectSubPix(strength, cv::Size(3, 3), cv::Point2f(j, i), f);
+
     float f_x = (f.at<float>(1, 2) - f.at<float>(1, 0)) / 2;
     float f_y = (f.at<float>(2, 1) - f.at<float>(0, 1)) / 2;
     float f_x2 = f.at<float>(1, 2) + f.at<float>(1, 0) - 2 * f.at<float>(1, 1);
@@ -74,9 +72,9 @@ std::vector<std::tuple<float, float>> sub_pixel_refinement(const cv::Mat& streng
 }
 
 std::vector<std::tuple<int, int>> adaptive_non_maximal_supression(std::vector<std::tuple<float, int, int>>& points) {
-  std::cout << "\tANMS" << std::endl;
+  std::cout << " -> ANMS " << std::flush;
 
-  const int feature_number = 300;
+  const int feature_number = 500;
 
   std::sort(points.begin(), points.end(), std::greater<std::tuple<float, int, int>>());
 
@@ -101,12 +99,13 @@ std::vector<std::tuple<int, int>> adaptive_non_maximal_supression(std::vector<st
 
   std::vector<std::tuple<int, int>> feature_points;
   for (const auto& [s, i, j] : candidates) feature_points.emplace_back(i, j);
+  std::cout << "raidus: " << std::get<0>(candidates.back()) << std::flush;
 
   return feature_points;
 }
 
 std::tuple<std::vector<std::tuple<float, float>>, std::vector<float>> Harris_corner_detector(const cv::Mat& image) {
-  std::cout << "\tHarris Corner Detector" << std::endl;
+  std::cout << " detector" << std::flush;
 
   cv::Mat blur;
   cv::GaussianBlur(image, blur, cv::Size(), 1.0, 1.0, cv::BORDER_REPLICATE);
@@ -158,12 +157,14 @@ MSOPDescriptor get_MSOP_features(const cv::Mat& image) {
 
   MSOPDescriptor feature_descriptors;
   for (int layer = 0; layer < 5; layer++) {
-    if (layer == 0) {
+    // If the image has more then 1M pixels, skip layer 0
+    if (layer == 0 && image.rows * image.cols > 1'000'000) {
+      std::cout << "\t[layer " << layer << "] skipped (image has more than 1M pixels)" << std::endl;
       cv::pyrDown(gray, gray, cv::Size(gray.cols / 2, gray.rows / 2), cv::BORDER_REPLICATE);
       continue;
     }
 
-    std::cout << "\t[layer " << layer << "]" << std::endl;
+    std::cout << "\t[layer " << layer << "]" << std::flush;
 
     auto [feature_points, orientations] = Harris_corner_detector(gray);
 
@@ -177,6 +178,8 @@ MSOPDescriptor get_MSOP_features(const cv::Mat& image) {
     }
 
     feature_descriptors.emplace_back(feature_points, descriptors);
+
+    std::cout << std::endl;
   }
 
   return feature_descriptors;
