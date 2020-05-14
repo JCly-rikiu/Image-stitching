@@ -47,8 +47,7 @@ int main(int argc, char* argv[]) {
 
   // draw_matched_features() must before warp_images_together()
   // Since warp_images_together() drops the original image from blending it again
-  if (show_matched_features)
-    draw_matched_features(image_data, panoramas_lists, match_points);
+  if (show_matched_features) draw_matched_features(image_data, panoramas_lists, match_points);
 
   warp_images_together(image_data, panoramas_lists);
 

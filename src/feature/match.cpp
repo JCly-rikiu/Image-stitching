@@ -23,11 +23,14 @@ MatchPoints match_features(const std::vector<MSOPDescriptor>& feature_descriptor
       auto& image1 = feature_descriptors[image1_i];
       auto& image2 = feature_descriptors[image2_i];
 
+      size_t offset1 = image1.size() > image2.size() ? image1.size() - image2.size() : 0;
+      size_t offset2 = image2.size() > image1.size() ? image2.size() - image1.size() : 0;
+
       std::vector<std::tuple<float, float, float, float>> match_points1;
       std::vector<std::tuple<float, float, float, float>> match_points2;
-      for (size_t layer = 0; layer != image1.size(); layer++) {
-        auto& [feature_points1, descriptor1] = image1[layer];
-        auto& [feature_points2, descriptor2] = image2[layer];
+      for (size_t layer = 0; layer != image1.size() - offset1; layer++) {
+        auto& [feature_points1, descriptor1] = image1[layer + offset1];
+        auto& [feature_points2, descriptor2] = image2[layer + offset2];
 
         cv::flann::GenericIndex<cvflann::L2<float>> index1(descriptor1, cvflann::KDTreeIndexParams());
         cv::flann::GenericIndex<cvflann::L2<float>> index2(descriptor2, cvflann::KDTreeIndexParams());
@@ -62,8 +65,7 @@ MatchPoints match_features(const std::vector<MSOPDescriptor>& feature_descriptor
   return final_match_points;
 }
 
-std::tuple<int, float, float> translation_RANSAC(
-    std::vector<std::tuple<float, float, float, float>>& feature_points) {
+std::tuple<int, float, float> translation_RANSAC(std::vector<std::tuple<float, float, float, float>>& feature_points) {
   const int k_times = 300;
   const int n_sample = 6;
   const float error = 500;
@@ -154,11 +156,12 @@ PanoramaLists match_images(MatchPoints& match_points) {
   for (size_t image1_i = 0; image1_i != num_image; image1_i++) {
     for (size_t image2_i = 0; image2_i != num_image; image2_i++) {
       if (image1_i == image2_i) continue;
+      auto original_match_points_size = match_points[image1_i][image2_i].size();
       auto [max_i, ti, tj] = translation_RANSAC(match_points[image1_i][image2_i]);
 
       if (max_i != 0) {
         std::cout << "\timage: " << image1_i << " -> " << image2_i << " : " << max_i << " / "
-                  << match_points[image1_i][image2_i].size() << "  ti = " << ti << " tj = " << tj << std::endl;
+                  << original_match_points_size << "  ti = " << ti << " tj = " << tj << std::endl;
         if (tj < 0)
           left_translations[image1_i].emplace_back(tj, ti, image2_i);
         else

@@ -109,7 +109,7 @@ void alpha_blend(cv::Mat& panoramas, cv::Mat& temp, const int left, const int ri
 
 void alpha_blend_image(cv::Mat& panoramas, cv::Mat& temp, const int current_left, const int current_right,
                        const int last_right) {
-  const int blend_half_width = 30;
+  const int blend_half_width = 50;
   if (last_right == 0) {
     alpha_blend(panoramas, temp, current_left, current_right, false);
   } else if (last_right - current_left < blend_half_width * 2) {
