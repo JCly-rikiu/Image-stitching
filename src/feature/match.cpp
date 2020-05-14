@@ -18,7 +18,9 @@ MatchPoints match_features(const std::vector<MSOPDescriptor>& feature_descriptor
   MatchPoints final_match_points(feature_descriptors.size());
   for (auto& v : final_match_points) v.resize(feature_descriptors.size());
 
+  std::cout << "\t" << std::flush;
   for (size_t image1_i = 0; image1_i != feature_descriptors.size(); image1_i++) {
+    std::cout << "[" << image1_i << "] " << std::flush;
     for (size_t image2_i = 0; image2_i != image1_i; image2_i++) {
       auto& image1 = feature_descriptors[image1_i];
       auto& image2 = feature_descriptors[image2_i];
@@ -61,6 +63,7 @@ MatchPoints match_features(const std::vector<MSOPDescriptor>& feature_descriptor
       final_match_points[image2_i][image1_i] = match_points2;
     }
   }
+  std::cout << std::endl;
 
   return final_match_points;
 }
