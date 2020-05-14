@@ -19,7 +19,9 @@ MatchedPoints MatchFeatures(const std::vector<MSOPDescriptor>& feature_descripto
   for (auto& v : final_match_points) v.resize(feature_descriptors.size());
 
   std::cout << "\t" << std::flush;
-  for (size_t image1_i = 0; image1_i != feature_descriptors.size(); image1_i++) {
+#pragma omp parallel for
+  for (size_t image1_i = 0; image1_i < feature_descriptors.size(); image1_i++) {
+#pragma omp critical
     std::cout << "[" << image1_i << "] " << std::flush;
     for (size_t image2_i = 0; image2_i != image1_i; image2_i++) {
       auto& image1 = feature_descriptors[image1_i];

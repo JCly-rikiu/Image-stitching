@@ -78,8 +78,9 @@ std::vector<std::tuple<int, int>> AdaptiveNonMaximalSupression(std::vector<std::
 
   std::sort(points.begin(), points.end(), std::greater<std::tuple<float, int, int>>());
 
-  std::vector<std::tuple<int, int, int>> candidates;
-  for (auto current = points.begin(); current != points.end(); current++) {
+  std::vector<std::tuple<int, int, int>> candidates(points.size());
+#pragma omp parallel for
+  for (auto current = points.begin(); current < points.end(); current++) {
     auto [current_s, current_i, current_j] = *current;
 
     auto min_radius = std::numeric_limits<int>::max();
@@ -91,7 +92,7 @@ std::vector<std::tuple<int, int>> AdaptiveNonMaximalSupression(std::vector<std::
       min_radius = std::min(min_radius, radius);
     }
 
-    candidates.emplace_back(min_radius, current_i, current_j);
+    candidates[current - points.begin()] = {min_radius, current_i, current_j};
   }
 
   std::sort(candidates.begin(), candidates.end(), std::greater<std::tuple<int, int, int>>());

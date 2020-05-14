@@ -86,40 +86,36 @@ void CylindricalWarpFeaturePoints(std::vector<std::tuple<float, float, float, fl
   }
 }
 
-void AlphaBlend(cv::Mat& panoramas, cv::Mat& temp, const int left, const int right, const bool blend) {
+void AlphaBlend(cv::Mat& panoramas, cv::Mat& temp, const int left, const int right) {
   for (int j = left; j != right + 1; j++) {
     auto pc = panoramas.col(j);
     auto tc = temp.col(j);
-    for (int i = 0; i != panoramas.rows; i++) {
-      auto t = tc.at<cv::Vec3b>(i, 0);
-      auto p = pc.at<cv::Vec3b>(i, 0);
-      if (p[0] == 0 && p[1] == 0 && p[2] == 0) pc.at<cv::Vec3b>(i, 0) = t;
 
-      if (t[0] != 0 || t[1] != 0 || t[2] != 0) {
-        if (blend) {
-          float alpha = static_cast<float>(j - left) / (right - left);
-          pc.at<cv::Vec3b>(i, 0) = (1 - alpha) * p + alpha * t;
-        } else {
-          pc.at<cv::Vec3b>(i, 0) = t;
-        }
-      }
-    }
+    float alpha = static_cast<float>(j - left) / (right - left);
+
+    pc = (1 - alpha) * pc + alpha * tc;
   }
 }
 
-void AlphaBlendImage(cv::Mat& panoramas, cv::Mat& temp, const int current_left, const int current_right,
-                     const int last_right) {
+void BlendImage(cv::Mat& panoramas, cv::Mat& temp, const int current_left, const int current_right,
+                const int last_right) {
   const int blend_half_width = 50;
-  if (last_right == 0) {
-    AlphaBlend(panoramas, temp, current_left, current_right, false);
+
+  int remain_left = current_left;
+  if (last_right == -1) {
+    // First image, no need to blend
+    remain_left = current_left;
   } else if (last_right - current_left < blend_half_width * 2) {
-    AlphaBlend(panoramas, temp, current_left, last_right, true);
-    AlphaBlend(panoramas, temp, last_right + 1, current_right, false);
+    AlphaBlend(panoramas, temp, current_left, last_right);
+    remain_left = last_right + 1;
   } else {
     int middle_line = (last_right - current_left) / 2 + current_left;
-    AlphaBlend(panoramas, temp, middle_line - blend_half_width, middle_line + blend_half_width, true);
-    AlphaBlend(panoramas, temp, middle_line + blend_half_width + 1, current_right, false);
+    AlphaBlend(panoramas, temp, middle_line - blend_half_width, middle_line + blend_half_width);
+    remain_left = middle_line + blend_half_width + 1;
   }
+
+  cv::Rect remain_ROI = cv::Rect(remain_left, 0, current_right - remain_left + 1, panoramas.rows);
+  temp(remain_ROI).copyTo(panoramas(remain_ROI));
 }
 
 void DriftCorrection(cv::Mat& panoramas, std::deque<std::tuple<int, float, float>>& list,
@@ -193,7 +189,7 @@ void WarpImagesTogether(const std::vector<cv::Mat>& image_data, PanoramaLists& p
     int cols = static_cast<int>(std::ceil(back_tj)) + image_data[back_image].cols;
     cv::Mat panoramas = cv::Mat::zeros(cv::Size(cols, rows), CV_8UC3);
 
-    int last_right = 0;
+    int last_right = -1;
     for (auto [image, ti, tj] : list) {
       std::cout << " -> [" << image << " (" << ti << " " << tj << ")]" << std::flush;
 
@@ -208,7 +204,7 @@ void WarpImagesTogether(const std::vector<cv::Mat>& image_data, PanoramaLists& p
       int current_left = static_cast<int>(std::ceil(tj + left));
       int current_right = static_cast<int>(std::floor(tj + right));
 
-      AlphaBlendImage(panoramas, temp, current_left, current_right, last_right);
+      BlendImage(panoramas, temp, current_left, current_right, last_right);
 
       last_right = current_right;
     }
@@ -232,27 +228,25 @@ void DrawMatchedFeatures(const std::vector<cv::Mat>& image_data, const PanoramaL
   std::cout << "[Draw matched features...]" << std::endl;
 
   for (int pano_index = 1; auto& list : panorama_lists) {
-    auto [first_image, first_ti, first_tj] = list.front();
-
-    int last_image = first_image;
-    for (auto [image, ti, tj] : list) {
-      if (image == first_image) continue;
+    auto list_end = list.end() - 1;  // For OpenMP controlling predicate
+#pragma omp parallel for
+    for (auto it = list.begin(); it < list_end; it++) {
+      auto [image1, ti1, tj1] = *it;
+      auto [image2, ti2, tj2] = *(it + 1);
 
       cv::Mat to;
-      cv::hconcat(image_data[last_image], image_data[image], to);
-      for (const auto [i1, j1, i2, j2] : match_points[last_image][image]) {
-        const int x_shift = image_data[last_image].cols;
+      cv::hconcat(image_data[image1], image_data[image2], to);
+      for (const auto [i1, j1, i2, j2] : match_points[image1][image2]) {
+        const int x_shift = image_data[image1].cols;
 
         cv::circle(to, cv::Point2d(j1, i1), 10, cv::Scalar(0, 0, 255), 3);
         cv::circle(to, cv::Point2d(j2 + x_shift, i2), 10, cv::Scalar(0, 0, 255), 3);
 
         cv::line(to, cv::Point2d(j1, i1), cv::Point2d(j2 + x_shift, i2), cv::Scalar(0, 255, 0), 2);
       }
-      cv::imwrite("pano" + std::to_string(pano_index) + "-" + std::to_string(last_image) + "to" +
-                      std::to_string(image) + ".jpg",
+      cv::imwrite("pano" + std::to_string(pano_index) + "-" + std::to_string(it - list.begin()) + "-" +
+                      std::to_string(image1) + "to" + std::to_string(image2) + ".jpg",
                   to);
-
-      last_image = image;
     }
 
     pano_index++;

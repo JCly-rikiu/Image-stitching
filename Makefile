@@ -13,9 +13,9 @@ SRCS        :=                               \
 OBJS        := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))
 
 CXX         := g++
-CXXFLAGS    := -Wall -Wextra -std=c++2a
+CXXFLAGS    := -Wall -Wextra -std=c++2a -fopenmp
 INCLUDE     := -I$(INC_DIR) $(shell pkg-config --cflags opencv4)
-LDFLAGS     := -L/usr/lib $(shell pkg-config --libs opencv4)
+LDFLAGS     := -L/usr/lib $(shell pkg-config --libs opencv4) -fopenmp
 
 .PHONY: all build clean release install
 
