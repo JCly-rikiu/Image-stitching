@@ -8,6 +8,6 @@
 
 using MSOPDescriptor = std::vector<std::tuple<std::vector<std::tuple<float, float>>, cv::Mat>>;
 
-MSOPDescriptor get_MSOP_features(const cv::Mat&);
+MSOPDescriptor GetMSOPFeatures(const cv::Mat&);
 
 #endif

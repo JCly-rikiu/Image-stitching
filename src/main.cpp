@@ -20,7 +20,7 @@ int main(int argc, char* argv[]) {
     if (arg.compare("--show-matched-features") == 0) show_matched_features = true;
   }
 
-  auto image_data = load_images(image_dir);
+  auto image_data = LoadImages(image_dir);
   if (image_data.empty()) {
     std::cerr << "The image directory is empty!" << std::endl;
     return EXIT_FAILURE;
@@ -29,27 +29,27 @@ int main(int argc, char* argv[]) {
   std::vector<MSOPDescriptor> feature_descriptors;
   for (int index = 0; const auto& image : image_data) {
     std::cout << "[" << index++ << "] ";
-    feature_descriptors.push_back(get_MSOP_features(image));
+    feature_descriptors.push_back(GetMSOPFeatures(image));
   }
 
-  auto match_points = match_features(feature_descriptors);
+  auto match_points = MatchFeatures(feature_descriptors);
 
   std::cout << "[Warp cylindrical...]" << std::endl;
   std::cout << "\t" << std::flush;
   for (size_t i = 0; i != image_data.size(); i++) {
     std::cout << "[" << i << "] " << std::flush;
-    for (auto& v : match_points[i]) cylindrical_warp_feature_points(v, image_data[i].rows, image_data[i].cols);
-    cylindrical_warp_image(image_data[i]);
+    for (auto& v : match_points[i]) CylindricalWarpFeaturePoints(v, image_data[i].rows, image_data[i].cols);
+    CylindricalWarpImage(image_data[i]);
   }
   std::cout << std::endl;
 
-  auto panoramas_lists = match_images(match_points);
+  auto panoramas_lists = MatchImages(match_points);
 
-  // draw_matched_features() must before warp_images_together()
-  // Since warp_images_together() drops the original image from blending it again
-  if (show_matched_features) draw_matched_features(image_data, panoramas_lists, match_points);
+  // DrawMatchedFeatures() must before WarpImagesTogether()
+  // Since WarpImagesTogether() drops the original image from blending it again
+  if (show_matched_features) DrawMatchedFeatures(image_data, panoramas_lists, match_points);
 
-  warp_images_together(image_data, panoramas_lists);
+  WarpImagesTogether(image_data, panoramas_lists);
 
   return EXIT_SUCCESS;
 }

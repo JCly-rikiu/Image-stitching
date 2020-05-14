@@ -7,7 +7,7 @@
 
 #include "image.h"
 
-std::vector<cv::Mat> load_images(std::string& image_dir) {
+std::vector<cv::Mat> LoadImages(std::string& image_dir) {
   std::cout << "[Loading images...]" << std::endl;
 
   std::vector<cv::Mat> images;

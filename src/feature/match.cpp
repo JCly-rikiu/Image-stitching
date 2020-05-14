@@ -10,12 +10,12 @@
 #include "detection.h"
 #include "match.h"
 
-MatchPoints match_features(const std::vector<MSOPDescriptor>& feature_descriptors) {
+MatchedPoints MatchFeatures(const std::vector<MSOPDescriptor>& feature_descriptors) {
   std::cout << "[Match features...]" << std::endl;
 
   const float ratio_threshold = 0.65;
 
-  MatchPoints final_match_points(feature_descriptors.size());
+  MatchedPoints final_match_points(feature_descriptors.size());
   for (auto& v : final_match_points) v.resize(feature_descriptors.size());
 
   std::cout << "\t" << std::flush;
@@ -68,7 +68,7 @@ MatchPoints match_features(const std::vector<MSOPDescriptor>& feature_descriptor
   return final_match_points;
 }
 
-std::tuple<int, float, float> translation_RANSAC(std::vector<std::tuple<float, float, float, float>>& feature_points) {
+std::tuple<int, float, float> TranslationRANSAC(std::vector<std::tuple<float, float, float, float>>& feature_points) {
   const int k_times = 300;
   const int n_sample = 6;
   const float error = 500;
@@ -134,9 +134,9 @@ std::tuple<int, float, float> translation_RANSAC(std::vector<std::tuple<float, f
   return {max_num_inlier, final_ti, final_tj};
 }
 
-void search(const int current_image, const bool left_search,
-            const std::vector<std::vector<std::tuple<float, float, int>>>& translations, std::vector<bool>& checked,
-            std::deque<std::tuple<int, float, float>>& list) {
+void SearchConnections(const int current_image, const bool left_search,
+                       const std::vector<std::vector<std::tuple<float, float, int>>>& translations,
+                       std::vector<bool>& checked, std::deque<std::tuple<int, float, float>>& list) {
   for (const auto [tj, ti, next_image] : translations[current_image]) {
     if (checked[next_image]) continue;
     checked[next_image] = true;
@@ -144,11 +144,11 @@ void search(const int current_image, const bool left_search,
       list.emplace_front(next_image, ti, tj);
     else
       list.emplace_back(next_image, ti, tj);
-    search(next_image, left_search, translations, checked, list);
+    SearchConnections(next_image, left_search, translations, checked, list);
   }
 }
 
-PanoramaLists match_images(MatchPoints& match_points) {
+PanoramaLists MatchImages(MatchedPoints& match_points) {
   std::cout << "[Match images...]" << std::endl;
 
   auto num_image = match_points.size();
@@ -160,7 +160,7 @@ PanoramaLists match_images(MatchPoints& match_points) {
     for (size_t image2_i = 0; image2_i != num_image; image2_i++) {
       if (image1_i == image2_i) continue;
       auto original_match_points_size = match_points[image1_i][image2_i].size();
-      auto [max_i, ti, tj] = translation_RANSAC(match_points[image1_i][image2_i]);
+      auto [max_i, ti, tj] = TranslationRANSAC(match_points[image1_i][image2_i]);
 
       if (max_i != 0) {
         std::cout << "\timage: " << image1_i << " -> " << image2_i << " : " << max_i << " / "
@@ -187,8 +187,8 @@ PanoramaLists match_images(MatchPoints& match_points) {
     // If there exists a 360 degree panoramas, it should generate a double head deque
     // the double head deque activates the drift correction
     // Notice we must search for right translations (connections) first, in order to find the original head
-    search(i, false, right_translations, checked, list);
-    search(i, true, left_translations, checked, list);
+    SearchConnections(i, false, right_translations, checked, list);
+    SearchConnections(i, true, left_translations, checked, list);
     checked[i] = true;
 
     // Since we searched for right translations (connections) first, the first head is the original head

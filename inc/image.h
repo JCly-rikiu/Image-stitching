@@ -6,6 +6,6 @@
 
 #include <opencv2/opencv.hpp>
 
-std::vector<cv::Mat> load_images(std::string&);
+std::vector<cv::Mat> LoadImages(std::string&);
 
 #endif

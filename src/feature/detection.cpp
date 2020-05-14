@@ -12,7 +12,7 @@
 
 const float radian_to_degree = 180 / std::acos(-1);
 
-std::vector<float> calculate_orientation(const cv::Mat& image, const std::vector<std::tuple<float, float>>& points) {
+std::vector<float> CalculateOrientation(const cv::Mat& image, const std::vector<std::tuple<float, float>>& points) {
   std::cout << " -> orientation" << std::flush;
 
   cv::Mat blur;
@@ -46,8 +46,8 @@ std::vector<float> calculate_orientation(const cv::Mat& image, const std::vector
   return orientation;
 }
 
-std::vector<std::tuple<float, float>> sub_pixel_refinement(const cv::Mat& strength,
-                                                           const std::vector<std::tuple<int, int>>& points) {
+std::vector<std::tuple<float, float>> SubPixelRefinement(const cv::Mat& strength,
+                                                         const std::vector<std::tuple<int, int>>& points) {
   std::cout << " -> subpixel refinement" << std::flush;
 
   std::vector<std::tuple<float, float>> feature_points;
@@ -71,7 +71,7 @@ std::vector<std::tuple<float, float>> sub_pixel_refinement(const cv::Mat& streng
   return feature_points;
 }
 
-std::vector<std::tuple<int, int>> adaptive_non_maximal_supression(std::vector<std::tuple<float, int, int>>& points) {
+std::vector<std::tuple<int, int>> AdaptiveNonMaximalSupression(std::vector<std::tuple<float, int, int>>& points) {
   std::cout << " -> ANMS " << std::flush;
 
   const int feature_number = 500;
@@ -104,7 +104,7 @@ std::vector<std::tuple<int, int>> adaptive_non_maximal_supression(std::vector<st
   return feature_points;
 }
 
-std::tuple<std::vector<std::tuple<float, float>>, std::vector<float>> Harris_corner_detector(const cv::Mat& image) {
+std::tuple<std::vector<std::tuple<float, float>>, std::vector<float>> HarrisCornerDetector(const cv::Mat& image) {
   std::cout << " detector" << std::flush;
 
   cv::Mat blur;
@@ -140,15 +140,15 @@ std::tuple<std::vector<std::tuple<float, float>>, std::vector<float>> Harris_cor
       if (s[j] > 10 && m[j] == 255) points.emplace_back(s[j], i, j);
   }
 
-  auto anms_points = adaptive_non_maximal_supression(points);
-  auto spf_points = sub_pixel_refinement(strength, anms_points);
+  auto anms_points = AdaptiveNonMaximalSupression(points);
+  auto spf_points = SubPixelRefinement(strength, anms_points);
 
-  auto orientations = calculate_orientation(image, spf_points);
+  auto orientations = CalculateOrientation(image, spf_points);
 
   return {spf_points, orientations};
 }
 
-MSOPDescriptor get_MSOP_features(const cv::Mat& image) {
+MSOPDescriptor GetMSOPFeatures(const cv::Mat& image) {
   std::cout << "[Get MSOP features...]" << std::endl;
 
   cv::Mat gray;
@@ -166,11 +166,11 @@ MSOPDescriptor get_MSOP_features(const cv::Mat& image) {
 
     std::cout << "\t[layer " << layer << "]" << std::flush;
 
-    auto [feature_points, orientations] = Harris_corner_detector(gray);
+    auto [feature_points, orientations] = HarrisCornerDetector(gray);
 
     cv::pyrDown(gray, gray, cv::Size(gray.cols / 2, gray.rows / 2), cv::BORDER_REPLICATE);
 
-    auto descriptors = get_descriptors(gray, feature_points, orientations);
+    auto descriptors = GetDescriptors(gray, feature_points, orientations);
 
     for (auto& [i, j] : feature_points) {
       i *= std::pow(2, layer);
