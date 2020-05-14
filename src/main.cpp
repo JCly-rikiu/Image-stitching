@@ -38,8 +38,7 @@ int main(int argc, char* argv[]) {
   std::cout << "\t" << std::flush;
 #pragma omp parallel for
   for (size_t i = 0; i < image_data.size(); i++) {
-#pragma omp critical
-    std::cout << "[" << i << "] " << std::flush;
+    std::cout << "[" + std::to_string(i) + "] " << std::flush;
     for (auto& v : match_points[i]) CylindricalWarpFeaturePoints(v, image_data[i].rows, image_data[i].cols);
     CylindricalWarpImage(image_data[i]);
   }

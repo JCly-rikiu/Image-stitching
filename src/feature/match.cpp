@@ -2,6 +2,7 @@
 #include <deque>
 #include <iostream>
 #include <random>
+#include <string>
 #include <tuple>
 #include <vector>
 
@@ -21,8 +22,7 @@ MatchedPoints MatchFeatures(const std::vector<MSOPDescriptor>& feature_descripto
   std::cout << "\t" << std::flush;
 #pragma omp parallel for
   for (size_t image1_i = 0; image1_i < feature_descriptors.size(); image1_i++) {
-#pragma omp critical
-    std::cout << "[" << image1_i << "] " << std::flush;
+    std::cout << "[" + std::to_string(image1_i) + "] " << std::flush;
     for (size_t image2_i = 0; image2_i != image1_i; image2_i++) {
       auto& image1 = feature_descriptors[image1_i];
       auto& image2 = feature_descriptors[image2_i];

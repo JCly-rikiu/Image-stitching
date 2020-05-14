@@ -2,6 +2,7 @@
 #include <cmath>
 #include <deque>
 #include <iostream>
+#include <string>
 #include <tuple>
 #include <vector>
 
@@ -159,7 +160,7 @@ cv::Mat CropRectangle(cv::Mat& panoramas, const std::vector<cv::Mat>& image_data
 }
 
 void WarpImagesTogether(const std::vector<cv::Mat>& image_data, PanoramaLists& panorama_lists) {
-  std::cout << "[Blend images...]" << std::endl;
+  std::cout << "\n[Blend images...]" << std::endl;
 
   for (int pano_index = 1; auto& list : panorama_lists) {
     std::cout << "\n[panorama " << pano_index << "]:";
@@ -228,11 +229,15 @@ void DrawMatchedFeatures(const std::vector<cv::Mat>& image_data, const PanoramaL
   std::cout << "[Draw matched features...]" << std::endl;
 
   for (int pano_index = 1; auto& list : panorama_lists) {
+    std::cout << "\t[pano " + std::to_string(pano_index) + "]" << std::flush;
+
     auto list_end = list.end() - 1;  // For OpenMP controlling predicate
 #pragma omp parallel for
     for (auto it = list.begin(); it < list_end; it++) {
       auto [image1, ti1, tj1] = *it;
       auto [image2, ti2, tj2] = *(it + 1);
+
+      std::cout << " [" + std::to_string(image1) + "-" + std::to_string(image2) + "]" << std::flush;
 
       cv::Mat to;
       cv::hconcat(image_data[image1], image_data[image2], to);
@@ -248,6 +253,7 @@ void DrawMatchedFeatures(const std::vector<cv::Mat>& image_data, const PanoramaL
                       std::to_string(image1) + "to" + std::to_string(image2) + ".jpg",
                   to);
     }
+    std::cout << std::endl;
 
     pano_index++;
   }
