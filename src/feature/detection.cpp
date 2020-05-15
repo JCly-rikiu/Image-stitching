@@ -10,6 +10,8 @@
 #include "description.h"
 #include "detection.h"
 
+bool fast_anms = false;
+
 std::vector<std::tuple<float, float>> SubPixelRefinement(const cv::Mat& strength,
                                                          const std::vector<std::tuple<int, int>>& points) {
   std::cout << " -> subpixel refinement" << std::flush;
@@ -41,6 +43,7 @@ std::vector<std::tuple<int, int>> AdaptiveNonMaximalSuppression(std::vector<std:
   const int feature_number = 500;
 
   std::sort(points.begin(), points.end(), std::greater<std::tuple<float, int, int>>());
+  if (fast_anms && points.size() > 10000) points.resize(10000);
 
   std::vector<std::tuple<int, int, int>> candidates(points.size());
 #pragma omp parallel for

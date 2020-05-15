@@ -4,11 +4,11 @@
 #include <tuple>
 #include <vector>
 
-#include <omp.h>
-
 #include <opencv2/opencv.hpp>
 
 #include "description.h"
+
+bool fast_patch = false;
 
 std::vector<float> CalculateOrientation(const cv::Mat& image, const std::vector<std::tuple<float, float>>& points) {
   std::cout << " -> orientation" << std::flush;
@@ -50,7 +50,7 @@ cv::Mat GetDescriptors(const cv::Mat& image, const cv::Mat& image_down,
                        const std::vector<std::tuple<float, float>>& feature_points) {
   auto orientations = CalculateOrientation(image, feature_points);
 
-  std::cout << " -> descriptor" << std::endl;
+  std::cout << " -> descriptor" << std::flush;
 
   const int patch_size = 40;
   const int small_patch_size = 8;
@@ -63,9 +63,6 @@ cv::Mat GetDescriptors(const cv::Mat& image, const cv::Mat& image_down,
   std::transform(feature_points.begin(), feature_points.end(), orientations.begin(), points_orientations.begin(),
                  [](const auto& p, const auto& o) { return std::tuple_cat(p, std::make_tuple(o)); });
 
-  // For better cache performance (maybe?)
-  std::vector<cv::Mat> patch_pool(omp_get_max_threads());
-
   cv::Mat_<float> descriptors(points_orientations.size(), feature_dimension);
 #pragma omp parallel for
   for (auto it = points_orientations.begin(); it < points_orientations.end(); it++) {
@@ -75,13 +72,16 @@ cv::Mat GetDescriptors(const cv::Mat& image, const cv::Mat& image_down,
     di /= 2;
     dj /= 2;
 
-    // Notice the positive theta and the origin in OpenCV
     cv::Mat rotate;
-    cv::warpAffine(blur, rotate, cv::getRotationMatrix2D(cv::Point2f(dj, di), t, 1), blur.size());
+    if (fast_patch) {
+      rotate = blur;
+    } else {
+      // Notice the positive theta and the origin in OpenCV
+      cv::warpAffine(blur, rotate, cv::getRotationMatrix2D(cv::Point(dj, di), t, 1), blur.size());
+    }
 
-    int tid = omp_get_thread_num();
-    cv::Mat& patch = patch_pool[tid];
-    cv::getRectSubPix(rotate, cv::Size(patch_size, patch_size), cv::Point2f(dj, di), patch);
+    cv::Mat patch;
+    cv::getRectSubPix(rotate, cv::Size(patch_size, patch_size), cv::Point(dj, di), patch);
     cv::resize(patch, patch, cv::Size(small_patch_size, small_patch_size));
 
     cv::Mat mean, stddev;
@@ -91,6 +91,8 @@ cv::Mat GetDescriptors(const cv::Mat& image, const cv::Mat& image_down,
 
     descriptors.row(it - points_orientations.begin()) = patch.reshape(1, feature_dimension).t();
   }
+
+  std::cout << std::endl;
 
   return descriptors;
 }

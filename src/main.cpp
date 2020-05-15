@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 
+#include "description.h"
 #include "detection.h"
 #include "image.h"
 #include "match.h"
@@ -18,6 +19,7 @@ int main(int argc, char* argv[]) {
   for (int i = 2; i < argc; i++) {
     std::string arg = argv[i];
     if (arg.compare("--show-feature-matches") == 0) show_matched_features = true;
+    if (arg.compare("--fast-approximation") == 0) fast_anms = fast_patch = true;
   }
 
   auto image_data = LoadImages(image_dir);
