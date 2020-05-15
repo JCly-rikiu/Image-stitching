@@ -11,12 +11,12 @@
 #include "detection.h"
 #include "match.h"
 
-MatchedPoints MatchFeatures(const std::vector<MSOPDescriptor>& feature_descriptors) {
+FeatureMatches MatchFeatures(const std::vector<MSOPDescriptors>& feature_descriptors) {
   std::cout << "[Match features...]" << std::endl;
 
   const float ratio_threshold = 0.65;
 
-  MatchedPoints final_match_points(feature_descriptors.size());
+  FeatureMatches final_match_points(feature_descriptors.size());
   for (auto& v : final_match_points) v.resize(feature_descriptors.size());
 
   std::cout << "\t" << std::flush;
@@ -150,7 +150,7 @@ void SearchConnections(const int current_image, const bool left_search,
   }
 }
 
-PanoramaLists MatchImages(MatchedPoints& match_points) {
+PanoramaLists MatchImages(FeatureMatches& match_points) {
   std::cout << "[Match images...]" << std::endl;
 
   auto num_image = match_points.size();

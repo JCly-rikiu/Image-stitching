@@ -224,8 +224,8 @@ void WarpImagesTogether(const std::vector<cv::Mat>& image_data, PanoramaLists& p
   }
 }
 
-void DrawMatchedFeatures(const std::vector<cv::Mat>& image_data, const PanoramaLists& panorama_lists,
-                         const MatchedPoints& match_points) {
+void DrawFeatureMatches(const std::vector<cv::Mat>& image_data, const PanoramaLists& panorama_lists,
+                        const FeatureMatches& match_points) {
   std::cout << "[Draw matched features...]" << std::endl;
 
   for (int pano_index = 1; auto& list : panorama_lists) {

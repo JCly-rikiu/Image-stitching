@@ -7,10 +7,10 @@
 
 #include "detection.h"
 
-using MatchedPoints = std::vector<std::vector<std::vector<std::tuple<float, float, float, float>>>>;
+using FeatureMatches = std::vector<std::vector<std::vector<std::tuple<float, float, float, float>>>>;
 using PanoramaLists = std::vector<std::deque<std::tuple<int, float, float>>>;
 
-MatchedPoints MatchFeatures(const std::vector<MSOPDescriptor>&);
-PanoramaLists MatchImages(MatchedPoints&);
+FeatureMatches MatchFeatures(const std::vector<MSOPDescriptors>&);
+PanoramaLists MatchImages(FeatureMatches&);
 
 #endif

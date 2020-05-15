@@ -17,7 +17,7 @@ int main(int argc, char* argv[]) {
   bool show_matched_features = false;
   for (int i = 2; i < argc; i++) {
     std::string arg = argv[i];
-    if (arg.compare("--show-matched-features") == 0) show_matched_features = true;
+    if (arg.compare("--show-feature-matches") == 0) show_matched_features = true;
   }
 
   auto image_data = LoadImages(image_dir);
@@ -26,7 +26,7 @@ int main(int argc, char* argv[]) {
     return EXIT_FAILURE;
   }
 
-  std::vector<MSOPDescriptor> feature_descriptors;
+  std::vector<MSOPDescriptors> feature_descriptors;
   for (int index = 0; const auto& image : image_data) {
     std::cout << "[" << index++ << "] ";
     feature_descriptors.push_back(GetMSOPFeatures(image));
@@ -46,9 +46,9 @@ int main(int argc, char* argv[]) {
 
   auto panoramas_lists = MatchImages(match_points);
 
-  // DrawMatchedFeatures() must before WarpImagesTogether()
+  // DrawFeatureMatches() must before WarpImagesTogether()
   // Since WarpImagesTogether() drops the original image from blending it again
-  if (show_matched_features) DrawMatchedFeatures(image_data, panoramas_lists, match_points);
+  if (show_matched_features) DrawFeatureMatches(image_data, panoramas_lists, match_points);
 
   WarpImagesTogether(image_data, panoramas_lists);
 

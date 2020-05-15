@@ -11,6 +11,6 @@
 void CylindricalWarpImage(cv::Mat&);
 void CylindricalWarpFeaturePoints(std::vector<std::tuple<float, float, float, float>>&, const int, const int);
 void WarpImagesTogether(const std::vector<cv::Mat>&, PanoramaLists&);
-void DrawMatchedFeatures(const std::vector<cv::Mat>&, const PanoramaLists&, const MatchedPoints&);
+void DrawFeatureMatches(const std::vector<cv::Mat>&, const PanoramaLists&, const FeatureMatches&);
 
 #endif
