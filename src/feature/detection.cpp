@@ -10,42 +10,6 @@
 #include "description.h"
 #include "detection.h"
 
-const float radian_to_degree = 180 / std::acos(-1);
-
-std::vector<float> CalculateOrientation(const cv::Mat& image, const std::vector<std::tuple<float, float>>& points) {
-  std::cout << " -> orientation" << std::flush;
-
-  cv::Mat blur;
-  cv::GaussianBlur(image, blur, cv::Size(), 4.5, 4.5, cv::BORDER_REPLICATE);
-
-  cv::Mat ix, iy;
-  cv::Sobel(blur, ix, -1, 1, 0, 1);
-  cv::Sobel(blur, iy, -1, 0, 1, 1);
-
-  std::vector<float> orientation;
-  for (const auto [di, dj] : points) {
-    int i = static_cast<int>(std::nearbyint(di));
-    int j = static_cast<int>(std::nearbyint(dj));
-
-    if (i < 0)
-      i = 0;
-    else if (i >= blur.rows)
-      i = blur.rows - 1;
-    if (j < 0)
-      j = 0;
-    else if (j >= blur.cols)
-      j = blur.cols - 1;
-
-    float x = ix.at<float>(i, j);
-    float y = iy.at<float>(i, j);
-
-    float norm = std::sqrt(x * x + y * y);
-    orientation.push_back(std::acos(x / norm) * radian_to_degree);
-  }
-
-  return orientation;
-}
-
 std::vector<std::tuple<float, float>> SubPixelRefinement(const cv::Mat& strength,
                                                          const std::vector<std::tuple<int, int>>& points) {
   std::cout << " -> subpixel refinement" << std::flush;
@@ -71,7 +35,7 @@ std::vector<std::tuple<float, float>> SubPixelRefinement(const cv::Mat& strength
   return feature_points;
 }
 
-std::vector<std::tuple<int, int>> AdaptiveNonMaximalSupression(std::vector<std::tuple<float, int, int>>& points) {
+std::vector<std::tuple<int, int>> AdaptiveNonMaximalSuppression(std::vector<std::tuple<float, int, int>>& points) {
   std::cout << " -> ANMS " << std::flush;
 
   const int feature_number = 500;
@@ -105,7 +69,7 @@ std::vector<std::tuple<int, int>> AdaptiveNonMaximalSupression(std::vector<std::
   return feature_points;
 }
 
-std::tuple<std::vector<std::tuple<float, float>>, std::vector<float>> HarrisCornerDetector(const cv::Mat& image) {
+std::vector<std::tuple<float, float>> HarrisCornerDetector(const cv::Mat& image) {
   std::cout << " detector" << std::flush;
 
   cv::Mat blur;
@@ -141,22 +105,20 @@ std::tuple<std::vector<std::tuple<float, float>>, std::vector<float>> HarrisCorn
       if (s[j] > 10 && m[j] == 255) points.emplace_back(s[j], i, j);
   }
 
-  auto anms_points = AdaptiveNonMaximalSupression(points);
+  auto anms_points = AdaptiveNonMaximalSuppression(points);
   auto spf_points = SubPixelRefinement(strength, anms_points);
 
-  auto orientations = CalculateOrientation(image, spf_points);
-
-  return {spf_points, orientations};
+  return spf_points;
 }
 
-MSOPDescriptor GetMSOPFeatures(const cv::Mat& image) {
+MSOPDescriptors GetMSOPFeatures(const cv::Mat& image) {
   std::cout << "[Get MSOP features...]" << std::endl;
 
-  cv::Mat gray;
+  cv::Mat gray, gray_down;
   cv::cvtColor(image, gray, cv::COLOR_BGR2GRAY);
   gray.convertTo(gray, CV_32F);
 
-  MSOPDescriptor feature_descriptors;
+  MSOPDescriptors feature_descriptors;
   for (int layer = 0; layer < 5; layer++) {
     // If the image has more then 1M pixels, skip layer 0
     if (layer == 0 && image.rows * image.cols > 1'000'000) {
@@ -167,11 +129,11 @@ MSOPDescriptor GetMSOPFeatures(const cv::Mat& image) {
 
     std::cout << "\t[layer " << layer << "]" << std::flush;
 
-    auto [feature_points, orientations] = HarrisCornerDetector(gray);
+    auto feature_points = HarrisCornerDetector(gray);
 
-    cv::pyrDown(gray, gray, cv::Size(gray.cols / 2, gray.rows / 2), cv::BORDER_REPLICATE);
+    cv::pyrDown(gray, gray_down, cv::Size(gray.cols / 2, gray.rows / 2), cv::BORDER_REPLICATE);
 
-    auto descriptors = GetDescriptors(gray, feature_points, orientations);
+    auto descriptors = GetDescriptors(gray, gray_down, feature_points);
 
     for (auto& [i, j] : feature_points) {
       i *= std::pow(2, layer);
@@ -180,7 +142,7 @@ MSOPDescriptor GetMSOPFeatures(const cv::Mat& image) {
 
     feature_descriptors.emplace_back(feature_points, descriptors);
 
-    std::cout << std::endl;
+    gray = gray_down;
   }
 
   return feature_descriptors;

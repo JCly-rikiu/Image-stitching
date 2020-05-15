@@ -10,21 +10,60 @@
 
 #include "description.h"
 
-cv::Mat GetDescriptors(const cv::Mat& image, const std::vector<std::tuple<float, float>>& feature_points,
-                       const std::vector<float>& orientations) {
-  std::cout << " -> descriptor" << std::flush;
+std::vector<float> CalculateOrientation(const cv::Mat& image, const std::vector<std::tuple<float, float>>& points) {
+  std::cout << " -> orientation" << std::flush;
+
+  const float radian_to_degree = 180 / std::acos(-1);
+
+  cv::Mat blur;
+  cv::GaussianBlur(image, blur, cv::Size(), 4.5, 4.5, cv::BORDER_REPLICATE);
+
+  cv::Mat ix, iy;
+  cv::Sobel(blur, ix, -1, 1, 0, 1);
+  cv::Sobel(blur, iy, -1, 0, 1, 1);
+
+  std::vector<float> orientation;
+  for (const auto [di, dj] : points) {
+    int i = static_cast<int>(std::nearbyint(di));
+    int j = static_cast<int>(std::nearbyint(dj));
+
+    if (i < 0)
+      i = 0;
+    else if (i >= blur.rows)
+      i = blur.rows - 1;
+    if (j < 0)
+      j = 0;
+    else if (j >= blur.cols)
+      j = blur.cols - 1;
+
+    float x = ix.at<float>(i, j);
+    float y = iy.at<float>(i, j);
+
+    float norm = std::sqrt(x * x + y * y);
+    orientation.push_back(std::acos(x / norm) * radian_to_degree);
+  }
+
+  return orientation;
+}
+
+cv::Mat GetDescriptors(const cv::Mat& image, const cv::Mat& image_down,
+                       const std::vector<std::tuple<float, float>>& feature_points) {
+  auto orientations = CalculateOrientation(image, feature_points);
+
+  std::cout << " -> descriptor" << std::endl;
 
   const int patch_size = 40;
   const int small_patch_size = 8;
   const int feature_dimension = small_patch_size * small_patch_size;
 
   cv::Mat blur;
-  cv::GaussianBlur(image, blur, cv::Size(), 1.0, 1.0, cv::BORDER_REPLICATE);
+  cv::GaussianBlur(image_down, blur, cv::Size(), 1.0, 1.0, cv::BORDER_REPLICATE);
 
   std::vector<std::tuple<float, float, float>> points_orientations(feature_points.size());
   std::transform(feature_points.begin(), feature_points.end(), orientations.begin(), points_orientations.begin(),
                  [](const auto& p, const auto& o) { return std::tuple_cat(p, std::make_tuple(o)); });
 
+  // For better cache performance (maybe?)
   std::vector<cv::Mat> patch_pool(omp_get_max_threads());
 
   cv::Mat_<float> descriptors(points_orientations.size(), feature_dimension);
