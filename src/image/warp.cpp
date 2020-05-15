@@ -92,8 +92,7 @@ void AlphaBlend(cv::Mat& panoramas, cv::Mat& temp, const int left, const int rig
     auto pc = panoramas.col(j);
     auto tc = temp.col(j);
 
-    float alpha = static_cast<float>(j - left) / (right - left);
-
+    float alpha = static_cast<float>(j - left) / (right + 1 - left);
     pc = (1 - alpha) * pc + alpha * tc;
   }
 }
