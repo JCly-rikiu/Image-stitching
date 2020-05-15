@@ -15,10 +15,10 @@ int main(int argc, char* argv[]) {
   std::string image_dir = argv[1];
   if (image_dir.back() != '/') image_dir += "/";
 
-  bool show_matched_features = false;
+  bool save_feature_matches = false;
   for (int i = 2; i < argc; i++) {
     std::string arg = argv[i];
-    if (arg.compare("--show-feature-matches") == 0) show_matched_features = true;
+    if (arg.compare("--save-feature-matches") == 0) save_feature_matches = true;
     if (arg.compare("--fast-approximation") == 0) fast_anms = fast_patch = true;
   }
 
@@ -50,7 +50,7 @@ int main(int argc, char* argv[]) {
 
   // DrawFeatureMatches() must before WarpImagesTogether()
   // Since WarpImagesTogether() drops the original image from blending it again
-  if (show_matched_features) DrawFeatureMatches(image_data, panoramas_lists, match_points);
+  if (save_feature_matches) SaveFeatureMatches(image_data, panoramas_lists, match_points);
 
   WarpImagesTogether(image_data, panoramas_lists);
 

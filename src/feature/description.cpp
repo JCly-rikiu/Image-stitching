@@ -11,6 +11,13 @@
 bool fast_patch = false;
 
 std::vector<float> CalculateOrientation(const cv::Mat& image, const std::vector<std::tuple<float, float>>& points) {
+  std::vector<float> orientation;
+
+  if (fast_patch) {
+    orientation.resize(points.size());
+    return orientation;
+  }
+
   std::cout << " -> orientation" << std::flush;
 
   const float radian_to_degree = 180 / std::acos(-1);
@@ -22,7 +29,6 @@ std::vector<float> CalculateOrientation(const cv::Mat& image, const std::vector<
   cv::Sobel(blur, ix, -1, 1, 0, 1);
   cv::Sobel(blur, iy, -1, 0, 1, 1);
 
-  std::vector<float> orientation;
   for (const auto [di, dj] : points) {
     int i = static_cast<int>(std::nearbyint(di));
     int j = static_cast<int>(std::nearbyint(dj));
