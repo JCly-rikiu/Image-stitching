@@ -87,17 +87,17 @@ void CylindricalWarpFeaturePoints(std::vector<std::tuple<float, float, float, fl
   }
 }
 
-void AlphaBlend(cv::Mat& panoramas, cv::Mat& temp, const int left, const int right) {
+void AlphaBlend(cv::Mat& panoramas, cv::Mat& temp, const int offset_j, const int left, const int right) {
   for (int j = left; j != right + 1; j++) {
     auto pc = panoramas.col(j);
-    auto tc = temp.col(j);
+    auto tc = temp.col(j - offset_j);
 
     float alpha = static_cast<float>(j - left) / (right + 1 - left);
     pc = (1 - alpha) * pc + alpha * tc;
   }
 }
 
-void BlendImage(cv::Mat& panoramas, cv::Mat& temp, const int current_left, const int current_right,
+void BlendImage(cv::Mat& panoramas, cv::Mat& temp, const int offset_j, const int current_left, const int current_right,
                 const int last_right) {
   const int blend_half_width = 50;
 
@@ -106,16 +106,17 @@ void BlendImage(cv::Mat& panoramas, cv::Mat& temp, const int current_left, const
     // First image, no need to blend
     remain_left = current_left;
   } else if (last_right - current_left < blend_half_width * 2) {
-    AlphaBlend(panoramas, temp, current_left, last_right);
+    AlphaBlend(panoramas, temp, offset_j, current_left, last_right);
     remain_left = last_right + 1;
   } else {
     int middle_line = (last_right - current_left) / 2 + current_left;
-    AlphaBlend(panoramas, temp, middle_line - blend_half_width, middle_line + blend_half_width);
+    AlphaBlend(panoramas, temp, offset_j, middle_line - blend_half_width, middle_line + blend_half_width);
     remain_left = middle_line + blend_half_width + 1;
   }
 
-  cv::Rect remain_ROI = cv::Rect(remain_left, 0, current_right - remain_left + 1, panoramas.rows);
-  temp(remain_ROI).copyTo(panoramas(remain_ROI));
+  cv::Rect p_remain_ROI = cv::Rect(remain_left, 0, current_right - remain_left + 1, panoramas.rows);
+  cv::Rect t_remain_ROI = cv::Rect(remain_left - offset_j, 0, current_right - remain_left + 1, panoramas.rows);
+  temp(t_remain_ROI).copyTo(panoramas(p_remain_ROI));
 }
 
 void DriftCorrection(cv::Mat& panoramas, std::deque<std::tuple<int, float, float>>& list,
@@ -176,6 +177,7 @@ void WarpImagesTogether(const std::vector<cv::Mat>& image_data, PanoramaLists& p
     auto [first_image, first_ti, first_tj] = list.front();
     auto [back_image, back_ti, back_tj] = list.back();
 
+    // Drops the original image from blending it again
     bool is_360 = false;
     float drift_correction_value = 1;
     if (first_image == back_image && list.size() > 1) {
@@ -197,14 +199,15 @@ void WarpImagesTogether(const std::vector<cv::Mat>& image_data, PanoramaLists& p
       float left = focal_length * std::atan(-half_col / focal_length) + half_col;
       float right = focal_length * std::atan(half_col / focal_length) + half_col;
 
-      cv::Mat temp(cv::Size(cols, rows), CV_8UC3);
-      cv::Mat translation_mat = (cv::Mat_<float>(2, 3) << 1, 0, tj, 0, 1, ti);
-      cv::warpAffine(image_data[image], temp, translation_mat, temp.size());
+      int offset_j = static_cast<int>(std::floor(tj));
+      cv::Mat temp;
+      cv::Mat translation_mat = (cv::Mat_<float>(2, 3) << 1, 0, tj - offset_j, 0, 1, ti);
+      cv::warpAffine(image_data[image], temp, translation_mat, cv::Size(image_data[image].cols, rows));
 
       int current_left = static_cast<int>(std::ceil(tj + left));
       int current_right = static_cast<int>(std::floor(tj + right));
 
-      BlendImage(panoramas, temp, current_left, current_right, last_right);
+      BlendImage(panoramas, temp, offset_j, current_left, current_right, last_right);
 
       last_right = current_right;
     }
