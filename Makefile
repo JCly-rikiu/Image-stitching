@@ -1,4 +1,4 @@
-TARGET      := stitcher
+TARGET     	:= stitcher
 
 BUILD_DIR   := ./build
 SRC_DIR     := ./src
@@ -6,14 +6,14 @@ INC_DIR     := ./inc
 OBJ_DIR     := $(BUILD_DIR)/obj
 BIN_DIR     := $(BUILD_DIR)/bin
 
-SRCS        :=                               \
-   $(wildcard $(SRC_DIR)/image/*.cpp)        \
-   $(wildcard $(SRC_DIR)/feature/*.cpp)      \
-   $(wildcard $(SRC_DIR)/*.cpp)
+SRCS        := $(wildcard $(SRC_DIR)/image/*.cpp)   \
+               $(wildcard $(SRC_DIR)/feature/*.cpp) \
+			   $(wildcard $(SRC_DIR)/*.cpp)
+
 OBJS        := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))
 
 CXX         := g++
-CXXFLAGS    := -Wall -Wextra -std=c++2a -fopenmp
+CXXFLAGS    := -Wall -Wextra -std=c++2a -O2 -fopenmp
 INCLUDE     := -I$(INC_DIR) $(shell pkg-config --cflags opencv4)
 LDFLAGS     := -L/usr/lib $(shell pkg-config --libs opencv4) -fopenmp
 
@@ -32,8 +32,7 @@ build:
 	@mkdir -p $(BIN_DIR)
 	@mkdir -p $(OBJ_DIR)
 
-release: CXXFLAGS += -O2
-release: clean build $(BIN_DIR)/$(TARGET) install
+release: build $(BIN_DIR)/$(TARGET) install
 
 clean:
 	-@rm -rvf $(OBJ_DIR)/*
