@@ -202,7 +202,7 @@ void WarpImagesTogether(const std::vector<cv::Mat>& image_data, PanoramaLists& p
       int offset_j = static_cast<int>(std::floor(tj));
       cv::Mat temp;
       cv::Mat translation_mat = (cv::Mat_<float>(2, 3) << 1, 0, tj - offset_j, 0, 1, ti);
-      cv::warpAffine(image_data[image], temp, translation_mat, cv::Size(image_data[image].cols, rows));
+      cv::warpAffine(image_data[image], temp, translation_mat, cv::Size(image_data[image].cols + 1, rows));  // Padding for integer pixel position
 
       int current_left = static_cast<int>(std::ceil(tj + left));
       int current_right = static_cast<int>(std::floor(tj + right));
