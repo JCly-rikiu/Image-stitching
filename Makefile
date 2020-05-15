@@ -1,4 +1,4 @@
-TARGET     	:= stitcher
+TARGET      := stitcher
 
 BUILD_DIR   := ./build
 SRC_DIR     := ./src
@@ -8,7 +8,7 @@ BIN_DIR     := $(BUILD_DIR)/bin
 
 SRCS        := $(wildcard $(SRC_DIR)/image/*.cpp)   \
                $(wildcard $(SRC_DIR)/feature/*.cpp) \
-			   $(wildcard $(SRC_DIR)/*.cpp)
+               $(wildcard $(SRC_DIR)/*.cpp)
 
 OBJS        := $(patsubst $(SRC_DIR)/%.cpp,$(OBJ_DIR)/%.o,$(SRCS))
 

@@ -28,10 +28,12 @@ std::vector<cv::Mat> LoadImages(std::string& image_dir) {
   for (const auto& filename : images_filename) {
     cv::Mat image = cv::imread(image_dir + filename, cv::IMREAD_COLOR);
     if (!image.data) std::cerr << "Could not open or find " << filename << std::endl;
-    images.push_back(image);
 
 #pragma omp critical
-    std::cout << "\t[" << images.size() - 1 << "] " << filename << std::endl;
+    {
+      images.push_back(image);
+      std::cout << "\t[" << images.size() - 1 << "] " << filename << std::endl;
+    }
   }
 
   return images;
