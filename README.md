@@ -97,7 +97,7 @@ g++ version 9.3.0 on (WSL Ubuntu 18.04 LTS, and Arch Linux)
 
 --save-feature-matches 的其中一張 example
 
-- 檔名 **pano1-7-6to14.jpg** 表示第 1 組 panorama 中的第 7 對照片，左邊的照片是編號 7 右邊是 14。
+- 檔名 **pano1-7-6to14.jpg** 表示第 1 組 panorama 中的第 7 對照片，左邊的照片是編號 6 右邊是 14。
 - **紅色的圓圈**是 feature points，**綠色的線**是 match。
 - 可以看出大致是 2D translation 的關係。
 - MSOP 的效果非常好，湖面的倒影也可以被正確辨識並 match 起來。
