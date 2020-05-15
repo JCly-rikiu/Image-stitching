@@ -54,6 +54,7 @@ Optional arguments:
 - --fast-approximation: 不使用 oriented patch，和 ANMS 時預先減少 feature points 的數量。
 
 程式會產生切除黑邊的全景圖 (panorama[i]-crop.jpg) 和未切除的黑邊的全景圖 (panorama[i].jpg) 在目前的目錄中。(i 為第幾組全景，照片資料夾中可以有不同地方拍攝的原始照片，程式會自動找出哪些是同一組全景。)
+
 如果有使用 --show-feature-matches，會產生 pano[i]-[j]-[img1]to[img2].jpg 在目前的目錄中。(i 為第幾組全景，j 為由左到右第幾對 match，img1, img2 為圖片的編號)
 
 **開發環境：**
