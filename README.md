@@ -21,7 +21,7 @@
 4. **Cylindrical Warping**
    - 將所有照片 warp 到半徑為 focal length 的圓柱面上。
    - 同時也計算 feature points 經過 warp 後的新座標。
-5. **Image Matching and Recognizing Panoramas** (bonus)
+5. **Image Matching and Recognising Panoramas** (bonus)
    - 使用 **RANSAC** 找出 feature 間的 homography，這邊只使用 2D translation，同時 reject outliers。
    - 找出原始照片中最適合的 panoramas 連接組合，只要有超過兩張照片以上的連接，就會被記錄為一組 panorama。
 6. **Image Blending: Constant width alpha blending**
