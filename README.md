@@ -2,9 +2,11 @@
 <div align="right">姓名：陳力宇&nbsp;&nbsp;&nbsp;&nbsp;學號：R08922069</div>
 <h1 align="center">Project 2</h1>
 
+**Note:** Due to Git LFS Bandwidth limit, the missing image files can be accessed by the following link [images/](https://www.csie.ntu.edu.tw/~r08922069/images/), [result/](https://www.csie.ntu.edu.tw/~r08922069/result/)
+
 ## Image Stitching
 
-![](./result/lake-crop.jpg)
+![](https://www.csie.ntu.edu.tw/~r08922069/result/lake-crop.jpg)
 
 **實作內容：**
 
@@ -71,27 +73,28 @@ g++ version 9.3.0 on (WSL Ubuntu 18.04 LTS, and Arch Linux)
 **Result:**
 
 使用相機：SONY ILCE-6000 加上腳架
+
 手動模式：固定光圈，ISO，快門時間
 
 - **Lake**
 
-![](./result/lake-crop.jpg)
+![](https://www.csie.ntu.edu.tw/~r08922069/result/lake-crop.jpg)
 
 - **Farm**
 
-![](./result/farm-crop.jpg)
+![](https://www.csie.ntu.edu.tw/~r08922069/result/farm-crop.jpg)
 
 - **Meadow**
 
-![](./result/meadow-crop.jpg)
+![](https://www.csie.ntu.edu.tw/~r08922069/result/meadow-crop.jpg)
 
 - **Building**
 
-![](./result/building-crop.jpg)
+![](https://www.csie.ntu.edu.tw/~r08922069/result/building-crop.jpg)
 
 - Test data from the course website
 
-![](./result/grail-crop.jpg)
+![](https://www.csie.ntu.edu.tw/~r08922069/result/grail-crop.jpg)
 
 ---
 
@@ -102,7 +105,7 @@ g++ version 9.3.0 on (WSL Ubuntu 18.04 LTS, and Arch Linux)
 - 可以看出大致是 2D translation 的關係。
 - MSOP 的效果非常好，湖面的倒影也可以被正確辨識並 match 起來。
 
-![](./result/pano1-7-6to14.jpg)
+![](https://www.csie.ntu.edu.tw/~r08922069/result/pano1-7-6to14.jpg)
 
 ---
 
@@ -115,4 +118,5 @@ g++ version 9.3.0 on (WSL Ubuntu 18.04 LTS, and Arch Linux)
 ---
 
 結果圖片在 result 資料夾內。
+
 原始照片在 images 資料夾內。
