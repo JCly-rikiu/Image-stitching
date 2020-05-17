@@ -6,7 +6,7 @@
 
 ## Image Stitching
 
-![](https://www.csie.ntu.edu.tw/~r08922069/result/lake-crop.jpg)
+![](https://www.csie.ntu.edu.tw/~r08922069/result/lake-crop-low-quality.jpg)
 
 **實作內容：**
 
@@ -78,19 +78,19 @@ g++ version 9.3.0 on (WSL Ubuntu 18.04 LTS, and Arch Linux)
 
 - **Lake**
 
-![](https://www.csie.ntu.edu.tw/~r08922069/result/lake-crop.jpg)
+![](https://www.csie.ntu.edu.tw/~r08922069/result/lake-crop-low-quality.jpg)
 
 - **Farm**
 
-![](https://www.csie.ntu.edu.tw/~r08922069/result/farm-crop.jpg)
+![](https://www.csie.ntu.edu.tw/~r08922069/result/farm-crop-low-quality.jpg)
 
 - **Meadow**
 
-![](https://www.csie.ntu.edu.tw/~r08922069/result/meadow-crop.jpg)
+![](https://www.csie.ntu.edu.tw/~r08922069/result/meadow-crop-low-quality.jpg)
 
 - **Building**
 
-![](https://www.csie.ntu.edu.tw/~r08922069/result/building-crop.jpg)
+![](https://www.csie.ntu.edu.tw/~r08922069/result/building-crop-low-quality.jpg)
 
 - Test data from the course website
 
