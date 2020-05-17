@@ -105,7 +105,7 @@ g++ version 9.3.0 on (WSL Ubuntu 18.04 LTS, and Arch Linux)
 - 可以看出大致是 2D translation 的關係。
 - MSOP 的效果非常好，湖面的倒影也可以被正確辨識並 match 起來。
 
-![](https://www.csie.ntu.edu.tw/~r08922069/result/pano1-7-6to14.jpg)
+![](https://www.csie.ntu.edu.tw/~r08922069/result/pano1-7-6to14-low-quality.jpg)
 
 ---
 
