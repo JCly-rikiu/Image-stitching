@@ -2,11 +2,11 @@
 <div align="right">姓名：陳力宇&nbsp;&nbsp;&nbsp;&nbsp;學號：R08922069</div>
 <h1 align="center">Project 2</h1>
 
-**Note:** Due to Git LFS Bandwidth limit, the missing image files can be accessed by the following link [images/](https://www.csie.ntu.edu.tw/~r08922069/images/), [result/](https://www.csie.ntu.edu.tw/~r08922069/result/)
+**Note:** Due to Git LFS Bandwidth limit, the missing image files can be accessed by the following link [images/](https://rikiu.u.paga.moe/images/), [result/](https://rikiu.u.paga.moe/result/)
 
 ## Image Stitching
 
-![](https://www.csie.ntu.edu.tw/~r08922069/result/lake-crop-low-quality.jpg)
+![](https://rikiu.u.paga.moe/result/lake-crop.jpg)
 
 **實作內容：**
 
@@ -78,23 +78,23 @@ g++ version 9.3.0 on (WSL Ubuntu 18.04 LTS, and Arch Linux)
 
 - **Lake**
 
-![](https://www.csie.ntu.edu.tw/~r08922069/result/lake-crop-low-quality.jpg)
+![](https://rikiu.u.paga.moe/result/lake-crop.jpg)
 
 - **Farm**
 
-![](https://www.csie.ntu.edu.tw/~r08922069/result/farm-crop-low-quality.jpg)
+![](https://rikiu.u.paga.moe/result/farm-crop.jpg)
 
 - **Meadow**
 
-![](https://www.csie.ntu.edu.tw/~r08922069/result/meadow-crop-low-quality.jpg)
+![](https://rikiu.u.paga.moe/result/meadow-crop.jpg)
 
 - **Building**
 
-![](https://www.csie.ntu.edu.tw/~r08922069/result/building-crop-low-quality.jpg)
+![](https://rikiu.u.paga.moe/result/building-crop.jpg)
 
 - Test data from the course website
 
-![](https://www.csie.ntu.edu.tw/~r08922069/result/grail-crop.jpg)
+![](https://rikiu.u.paga.moe/result/grail-crop.jpg)
 
 ---
 
@@ -105,7 +105,7 @@ g++ version 9.3.0 on (WSL Ubuntu 18.04 LTS, and Arch Linux)
 - 可以看出大致是 2D translation 的關係。
 - MSOP 的效果非常好，湖面的倒影也可以被正確辨識並 match 起來。
 
-![](https://www.csie.ntu.edu.tw/~r08922069/result/pano1-7-6to14-low-quality.jpg)
+![](https://rikiu.u.paga.moe/result/pano1-7-6to14.jpg)
 
 ---
 
