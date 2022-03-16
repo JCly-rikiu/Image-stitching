@@ -6,7 +6,7 @@
 
 ## Image Stitching
 
-![](https://rikiu.u.paga.moe/result/lake-crop.jpg)
+![](https://rikiu.u.paga.moe/result/lake-crop-compressed.jpg)
 
 **實作內容：**
 
@@ -78,19 +78,19 @@ g++ version 9.3.0 on (WSL Ubuntu 18.04 LTS, and Arch Linux)
 
 - **Lake**
 
-![](https://rikiu.u.paga.moe/result/lake-crop.jpg)
+![](https://rikiu.u.paga.moe/result/lake-crop-compressed.jpg)
 
 - **Farm**
 
-![](https://rikiu.u.paga.moe/result/farm-crop.jpg)
+![](https://rikiu.u.paga.moe/result/farm-crop-compressed.jpg)
 
 - **Meadow**
 
-![](https://rikiu.u.paga.moe/result/meadow-crop.jpg)
+![](https://rikiu.u.paga.moe/result/meadow-crop-compressed.jpg)
 
 - **Building**
 
-![](https://rikiu.u.paga.moe/result/building-crop.jpg)
+![](https://rikiu.u.paga.moe/result/building-crop-compressed.jpg)
 
 - Test data from the course website
 
@@ -105,7 +105,7 @@ g++ version 9.3.0 on (WSL Ubuntu 18.04 LTS, and Arch Linux)
 - 可以看出大致是 2D translation 的關係。
 - MSOP 的效果非常好，湖面的倒影也可以被正確辨識並 match 起來。
 
-![](https://rikiu.u.paga.moe/result/pano1-7-6to14.jpg)
+![](https://rikiu.u.paga.moe/result/pano1-7-6to14-compressed.jpg)
 
 ---
 
